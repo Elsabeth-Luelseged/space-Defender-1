@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Space Defender</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body class="bg-[#05050d] text-slate-200 select-none overflow-hidden">
+    <!-- CRT Screen Overlay for retro feel -->
+    <div class="crt-overlay"></div>
+    <div class="space-grid"></div>
+    <div class="animated-stars"></div>
+
+    <!-- SPLASH SCREEN -->
+    <div id="splash-screen" class="screen active bg-[#05050f] z-50">
+      <div class="flex flex-col items-center justify-center space-y-6">
+        <!-- Brand Text -->
+        <h2 id="splash-brand" class="text-xs font-mono tracking-[0.4em] text-cyan-400 opacity-80 uppercase">
+          Axumit Studios
+        </h2>
+        <!-- Neon Logo Frame -->
+        <div class="relative w-24 h-24 flex items-center justify-center">
+          <div class="absolute inset-0 rounded-xl border-2 border-pink-500 animate-pulse opacity-40 blur-sm"></div>
+          <div class="absolute inset-2 rounded-lg border-2 border-cyan-400 rotate-45 animate-spin duration-[15000ms]"></div>
+          <div class="absolute inset-4 rounded-full border border-yellow-400 -rotate-45 animate-spin duration-[8000ms]"></div>
+          <!-- Centered Glowing emblem -->
+          <svg class="w-8 h-8 text-pink-500 drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 22h20L12 2z" />
+          </svg>
+        </div>
+        <!-- Progress Text -->
+        <div class="flex flex-col items-center space-y-2 pt-4">
+          <p class="text-[10px] font-mono tracking-widest text-slate-400 animate-pulse">
+            LOADING DEFENSE ALGORITHMS...
+          </p>
+          <div class="w-40 h-1 bg-slate-800 rounded-full overflow-hidden">
+            <div id="splash-progress" class="h-full bg-cyan-400 transition-all duration-3000 ease-out" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN MENU -->
+    <div id="main-menu" class="screen bg-gradient-to-b from-[#060613]/90 to-[#030308]/95 z-40">
+      <div class="w-full max-w-lg px-6 flex flex-col items-center justify-between h-[85vh] text-center">
+        <!-- Header -->
+        <div class="mt-8 flex flex-col items-center space-y-4">
+          <div class="flex items-center space-x-2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-[10px] font-mono tracking-widest text-cyan-400 uppercase">
+            <span>● NEON FORCE ACTIVE</span>
+          </div>
+          <!-- Game Title -->
+          <h1 id="game-title" class="text-4xl md:text-5xl font-extrabold tracking-tight text-white uppercase drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]">
+            Space <span class="text-cyan-400">Defender</span>
+          </h1>
+          <!-- Subtitle / Game Description -->
+          <p id="game-description" class="text-xs md:text-sm text-slate-400 font-normal leading-relaxed max-w-sm">
+            Space Defender is a fast-paced cosmic action game where you pilot a starship to protect your planet and conquer endless waves of enemy ships, alien bugs, and asteroids.
+          </p>
+        </div>
+
+        <!-- Space Ship Vector preview -->
+        <div class="my-4 relative w-32 h-32 flex items-center justify-center animate-ship-drift">
+          <svg class="w-16 h-16 text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.7)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 22l10-4 10 4L12 2z" />
+          </svg>
+          <div class="absolute bottom-2 w-4 h-4 rounded-full bg-orange-500/80 animate-ping"></div>
+        </div>
+
+        <!-- Controls & Buttons -->
+        <div class="w-full flex flex-col space-y-3 mb-8">
+          <!-- Start Button -->
+          <button id="btn-start-game" class="w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-lg rounded-xl transition duration-200 uppercase tracking-widest font-mono cursor-pointer shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-95 min-h-[52px]">
+            START MISSION
+          </button>
+
+          <!-- Toggle buttons row -->
+          <div class="grid grid-cols-2 gap-3 w-full">
+            <!-- Audio Button -->
+            <button id="btn-sound-toggle" class="py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-xs rounded-xl border border-slate-800 transition duration-200 cursor-pointer flex items-center justify-center space-x-2 min-h-[48px]">
+              <svg id="sound-on-icon" class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 18.75V5.25L7.75 9.5H4.5v5h3.25L12 18.75z" />
+              </svg>
+              <svg id="sound-off-icon" class="w-4 h-4 text-slate-500 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 9.75L19.5 12m0 0l2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6L4.5 9.5H1.5v5h3l4.5 3.75V5.25z" />
+              </svg>
+              <span id="sound-text">SOUND: ON</span>
+            </button>
+
+            <!-- Instructions Toggle -->
+            <button id="btn-how-to-play" class="py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-xs rounded-xl border border-slate-800 transition duration-200 cursor-pointer flex items-center justify-center space-x-2 min-h-[48px]">
+              <span>HOW TO PLAY</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INSTRUCTIONS MODAL -->
+    <div id="instructions-modal" class="hidden fixed inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-6">
+      <div class="bg-[#0b0b18] border border-cyan-500/30 rounded-2xl p-6 w-full max-w-sm text-center flex flex-col space-y-5 neon-box-blue">
+        <h3 class="text-xl font-bold text-white tracking-wide uppercase">Mission Briefing</h3>
+        
+        <div class="text-left space-y-4 text-xs leading-relaxed text-slate-300 font-mono">
+          <div class="flex items-start space-x-3">
+            <span class="text-cyan-400 font-bold">1.</span>
+            <p>Your spaceship <span class="text-cyan-400">automatically aims and fires</span> at the nearest enemies. Focus on dodging hazard paths!</p>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-pink-500 font-bold">2.</span>
+            <p>Drag anywhere on screen to guide your ship, or use <span class="text-pink-500">WASD / Arrow Keys</span> on keyboards.</p>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-yellow-400 font-bold">3.</span>
+            <p>Do NOT let incoming enemy units or asteroids crash into <span class="text-yellow-400">the Planet</span> at the bottom!</p>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="text-green-400 font-bold">4.</span>
+            <p>Collect floating credits & gems. Tap bottom special keys to trigger <span class="text-green-400">Shields, Turrets or Overdrives</span>.</p>
+          </div>
+        </div>
+
+        <button id="btn-close-instructions" class="py-3 bg-cyan-500 text-slate-950 font-bold text-sm rounded-xl cursor-pointer hover:bg-cyan-400 min-h-[48px]">
+          UNDERSTOOD
+        </button>
+      </div>
+    </div>
+
+    <!-- GAMEPLAY AREA -->
+    <div id="gameplay-container" class="screen z-20">
+      <!-- Fullscreen Game Canvas -->
+      <canvas id="game-canvas" class="absolute inset-0 block"></canvas>
+
+      <!-- HEADS-UP DISPLAY (HUD) -->
+      <div class="absolute inset-0 pointer-events-none flex flex-col justify-between p-4 font-mono select-none">
+        <!-- Compact Top Bar HUD -->
+        <div id="top-hud-bar" class="fixed top-4 left-4 right-4 bg-slate-950/80 border border-cyan-500/30 rounded-2xl p-2 px-3.5 flex flex-col space-y-1.5 pointer-events-auto z-30 shadow-[0_0_15px_rgba(6,182,212,0.15)] backdrop-blur-md">
+          <!-- Row 1: Counters and controls -->
+          <div class="w-full flex items-center justify-between flex-wrap gap-y-1">
+            <!-- Stats Left (Score & Hi-Score) -->
+            <div class="flex items-center space-x-2.5 shrink-0">
+              <!-- Gold Trophy Icon -->
+              <svg class="w-3.5 h-3.5 text-yellow-500 drop-shadow-[0_0_4px_rgba(234,179,8,0.4)] shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 2H5c-1.1 0-2 .9-2 2v3c0 2.24 1.81 4.07 4 4.3V16c0 1.3 1.1 2.4 2.4 2.4h1.1v2.1h-2v2h11v-2h-2v-2.1h1.1c1.3 0 2.4-1.1 2.4-2.4v-4.7c2.19-.23 4-2.06 4-4.3V4c0-1.1-.9-2-2-2zM5 7V4h2v3c0 1.1-.9 2-2 2zm14 0c-1.1 0-2-.9-2-2V4h2v3z"/>
+              </svg>
+              <div class="flex flex-col leading-none">
+                <span class="text-[8px] text-slate-400 font-bold tracking-wider">SCORE</span>
+                <span id="hud-score" class="text-white font-extrabold text-[11px] tracking-wide mt-0.5">0</span>
+              </div>
+              <div class="h-4 w-[1px] bg-slate-800"></div>
+              <div class="flex flex-col leading-none">
+                <span class="text-[8px] text-slate-400 font-bold tracking-wider">HI-SCORE</span>
+                <span id="hud-high-score" class="text-yellow-400 font-extrabold text-[11px] tracking-wide mt-0.5">0</span>
+              </div>
+            </div>
+
+            <!-- Wave info center -->
+            <div class="flex items-center justify-center select-none shrink-0">
+              <div class="border border-cyan-500/30 bg-cyan-950/30 rounded-lg px-2.5 py-0.5 flex flex-col items-center justify-center min-w-[50px] leading-tight">
+                <span class="text-[7px] font-bold text-slate-400 tracking-wider">WAVE</span>
+                <span id="hud-wave" class="text-cyan-400 font-extrabold text-[11px] tracking-wider">1</span>
+              </div>
+              <!-- Old warning alert is now hidden/unused in HTML to avoid layout breaking, but we keep an invisible node in case script binds to it -->
+              <span id="hud-alert" class="hidden"></span>
+            </div>
+
+            <!-- Right Side Indicators & Pause -->
+            <div class="flex items-center space-x-2.5 shrink-0">
+              <!-- Health & Shields dual block -->
+              <div class="flex flex-col space-y-1 min-w-[110px] md:min-w-[130px]">
+                <!-- Player Hull Bar -->
+                <div class="flex items-center space-x-1.5 leading-none">
+                  <!-- Red Heart Icon -->
+                  <svg class="w-2.5 h-2.5 text-rose-500 drop-shadow-[0_0_4px_rgba(244,63,94,0.5)] fill-current shrink-0" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                  <!-- Progress bar -->
+                  <div class="flex-1 h-1 bg-slate-950 rounded-full border border-slate-900 overflow-hidden relative">
+                    <div id="ship-hull-bar" class="h-full bg-gradient-to-r from-rose-500 to-pink-500 shadow-[0_0_4px_#f43f5e] transition-all duration-100" style="width: 100%"></div>
+                  </div>
+                  <span id="ship-hull-txt" class="text-rose-400 text-[8px] font-bold w-6 text-right">100%</span>
+                </div>
+                
+                <!-- Player Shield Bar -->
+                <div class="flex items-center space-x-1.5 leading-none">
+                  <!-- Cyan Shield Icon -->
+                  <svg class="w-2.5 h-2.5 text-cyan-400 drop-shadow-[0_0_4px_rgba(34,211,238,0.5)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                  </svg>
+                  <!-- Progress bar -->
+                  <div class="flex-1 h-1 bg-slate-950 rounded-full border border-slate-900 overflow-hidden relative">
+                    <div id="ship-shield-bar" class="h-full bg-gradient-to-r from-cyan-500 to-blue-400 shadow-[0_0_4px_#06b6d4] transition-all duration-100" style="width: 100%"></div>
+                  </div>
+                  <span id="ship-shield-txt" class="text-cyan-400 text-[8px] font-bold w-6 text-right">100%</span>
+                </div>
+              </div>
+
+              <div class="h-4 w-[1px] bg-slate-800"></div>
+
+              <!-- Credits and Gems indicators stacked -->
+              <div class="flex flex-col space-y-0.5 leading-none shrink-0">
+                <div class="flex items-center space-x-1 text-[9px] text-yellow-400 font-bold">
+                  <svg class="w-2.5 h-2.5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/>
+                  </svg>
+                  <span id="hud-credits">0</span>
+                </div>
+                <div class="flex items-center space-x-1 text-[8px] text-purple-400 font-bold">
+                  <svg class="w-2 h-2 text-purple-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L2 12l10 10 10-10L12 2z"/>
+                  </svg>
+                  <span id="hud-gems">0</span>
+                </div>
+              </div>
+
+              <div class="h-4 w-[1px] bg-slate-800"></div>
+
+              <!-- Pause / Shop Trigger -->
+              <button id="btn-pause-game" class="w-6 h-6 flex items-center justify-center bg-slate-900 border border-slate-700 rounded-md text-cyan-400 hover:bg-slate-800 active:scale-95 transition cursor-pointer shrink-0">
+                <span class="text-[8px] font-bold">&#x275A;&#x275A;</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Row 2: Home World Integrity bar -->
+          <div class="w-full flex items-center space-x-2 leading-none border-t border-slate-900/60 pt-1.5 mt-0.5">
+            <div class="flex items-center space-x-1.5 shrink-0">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="text-[8px] text-slate-400 font-bold tracking-wider">HOME WORLD INTEGRITY</span>
+            </div>
+            <div class="flex-1 h-1 bg-slate-950 rounded-full border border-slate-900/60 overflow-hidden relative">
+              <div id="planet-health-bar" class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 shadow-[0_0_4px_#10b981] transition-all duration-200" style="width: 100%"></div>
+            </div>
+            <span id="planet-health-txt" class="text-emerald-400 font-bold text-[8px] w-6 text-right shrink-0">100%</span>
+          </div>
+        </div>
+
+        <!-- Centered Wave Transition Countdown Overlay -->
+        <div id="wave-countdown-overlay" class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center font-sans z-40 select-none transition-all duration-300 opacity-0 hidden">
+          <div class="text-center transform scale-95 transition-transform duration-300 bg-slate-950/85 border border-cyan-500/20 rounded-2xl p-6 shadow-[0_0_30px_rgba(6,182,212,0.15)] backdrop-blur-md">
+            <div id="wave-countdown-title" class="text-xs tracking-[0.4em] text-cyan-400 font-bold uppercase mb-2 drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]">
+              WAVE 1 STARTS IN
+            </div>
+            <div id="wave-countdown-number" class="text-6xl font-extrabold text-white animate-bounce tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]">
+              3
+            </div>
+          </div>
+        </div>
+
+        <!-- Centered Wave Start Splash Alert -->
+        <div id="wave-start-overlay" class="absolute inset-0 pointer-events-none flex items-center justify-center font-sans z-40 select-none transition-all duration-300 opacity-0 hidden">
+          <div class="text-center transform scale-95 transition-transform duration-300 bg-slate-950/80 border border-cyan-500/30 rounded-2xl p-6 px-10 shadow-[0_0_30px_rgba(6,182,212,0.25)] backdrop-blur-md animate-pulse">
+            <div id="wave-start-title" class="text-4xl font-extrabold text-cyan-400 tracking-[0.25em] uppercase drop-shadow-[0_0_12px_rgba(6,182,212,0.7)]">
+              WAVE 1
+            </div>
+            <p class="text-[9px] tracking-[0.3em] text-slate-400 font-semibold uppercase mt-2">ENGAGE ALL ENEMY FORCES</p>
+          </div>
+        </div>
+
+        <!-- Touch Controls overlays (active only on mobile) -->
+        <!-- Joystick Zone (Left) -->
+        <div id="touch-movement-zone" class="absolute left-6 bottom-32 w-32 h-32 hidden">
+          <div id="virtual-joystick" class="joystick-container">
+            <div id="joystick-knob" class="joystick-knob"></div>
+          </div>
+        </div>
+
+        <!-- Special Ability keys bottom panel -->
+        <div class="w-full mt-auto flex flex-col space-y-3 pointer-events-auto">
+          <!-- Bottom Action Row -->
+          <div class="w-full flex justify-between items-center z-30">
+            <!-- Instructions/Tip label -->
+            <span class="text-[9px] text-slate-500 leading-normal max-w-[120px] hidden md:block">
+              ⌨ WASD/Arrows to pilot ship.<br>Space to fire abilities.<br>Collect loot!
+            </span>
+
+            <!-- Ability buttons grid -->
+            <div class="flex space-x-3 ml-auto pointer-events-auto">
+              <!-- MED KIT (Key 1) -->
+              <button id="btn-ability-med" class="ability-btn bg-emerald-950/80 hover:bg-emerald-900 text-emerald-400 border-emerald-500/40 hover:border-emerald-400/80 shadow-[0_0_10px_rgba(16,185,129,0.15)] min-h-[56px] min-w-[56px]">
+                <svg class="w-5 h-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />
+                </svg>
+                <span>MED [1]</span>
+                <div id="cooldown-med" class="ability-cooldown-overlay"></div>
+              </button>
+
+              <!-- AUTO-TURRET (Key 2) -->
+              <button id="btn-ability-turret" class="ability-btn bg-cyan-950/80 hover:bg-cyan-900 text-cyan-400 border-cyan-500/40 hover:border-cyan-400/80 shadow-[0_0_10px_rgba(6,182,212,0.15)] min-h-[56px] min-w-[56px]">
+                <svg class="w-5 h-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>TURR [2]</span>
+                <div id="cooldown-turret" class="ability-cooldown-overlay"></div>
+              </button>
+
+              <!-- RAPID OVERDRIVE (Key 3) -->
+              <button id="btn-ability-overdrive" class="ability-btn bg-pink-950/80 hover:bg-pink-900 text-pink-400 border-pink-500/40 hover:border-pink-400/80 shadow-[0_0_10px_rgba(236,72,153,0.15)] min-h-[56px] min-w-[56px]">
+                <svg class="w-5 h-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>BURST [3]</span>
+                <div id="cooldown-overdrive" class="ability-cooldown-overlay"></div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HANGAR & UPGRADE STATION MENU -->
+    <div id="upgrades-overlay" class="hidden fixed inset-0 bg-[#060613]/95 z-40 flex items-center justify-center p-4">
+      <div class="bg-[#0b0b1a] border-2 border-cyan-500/20 rounded-2xl p-5 w-full max-w-lg h-[90vh] flex flex-col justify-between shadow-[0_0_30px_rgba(6,182,212,0.15)]">
+        <!-- Title & Currency Info -->
+        <div class="flex justify-between items-center border-b border-slate-900 pb-3">
+          <div>
+            <h2 class="text-lg font-bold text-white uppercase tracking-wider">Hangar & Upgrades</h2>
+            <p class="text-[10px] font-mono text-slate-500 uppercase">Enhance armor, shields, weapons & hire systems</p>
+          </div>
+          <!-- Currency Display in Shop -->
+          <div class="flex items-center space-x-3 font-mono bg-slate-950/60 py-1.5 px-3 rounded-lg border border-slate-900">
+            <div class="flex items-center space-x-1 text-xs text-yellow-400 font-bold">
+              <span>CR:</span>
+              <span id="shop-credits">0</span>
+            </div>
+            <div class="flex items-center space-x-1 text-xs text-purple-400 font-bold">
+              <span>GEM:</span>
+              <span id="shop-gems">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scrollable Upgrades Grid -->
+        <div class="flex-1 my-4 overflow-y-auto space-y-4 pr-1 upgrades-scroll font-mono text-xs">
+          
+          <!-- HANGAR / CHOOSE SHIPS -->
+          <div>
+            <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-2 flex items-center">
+              <span class="w-1 h-3 bg-cyan-500 mr-2 rounded-full"></span> 
+              1. Ship Selection (Hangar)
+            </h3>
+            <div class="grid grid-cols-1 gap-2.5">
+              
+              <!-- Ship 1 -->
+              <div id="shop-ship-defender" class="flex justify-between items-center p-3 bg-slate-950/60 rounded-xl border-2 border-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.1)]">
+                <div>
+                  <h4 class="font-bold text-white">ORION FIGHTER</h4>
+                  <p class="text-[9px] text-slate-400">Default defender vessel. Balanced speed & weapons.</p>
+                </div>
+                <button class="px-3 py-1.5 bg-cyan-500 text-slate-950 text-[10px] font-bold rounded-lg cursor-pointer uppercase">Equipped</button>
+              </div>
+
+              <!-- Ship 2 -->
+              <div id="shop-ship-vulture" class="flex justify-between items-center p-3 bg-slate-950/30 rounded-xl border border-slate-900">
+                <div>
+                  <h4 class="font-bold text-slate-300">VULTURE FRIGATE</h4>
+                  <p class="text-[9px] text-slate-500">Fast, high agility. Regenerates shields +30% quicker.</p>
+                </div>
+                <div class="flex flex-col items-end space-y-1">
+                  <span class="text-[9px] text-purple-400 font-bold">5 GEMS</span>
+                  <button id="btn-unlock-vulture" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-[10px] font-bold rounded-lg cursor-pointer uppercase min-h-[32px]">Unlock</button>
+                </div>
+              </div>
+
+              <!-- Ship 3 -->
+              <div id="shop-ship-crusader" class="flex justify-between items-center p-3 bg-slate-950/30 rounded-xl border border-slate-900">
+                <div>
+                  <h4 class="font-bold text-slate-300">CRUSADER CRUISER</h4>
+                  <p class="text-[9px] text-slate-500">Heavily armored. Built-in orbiting drone fires side-lasers.</p>
+                </div>
+                <div class="flex flex-col items-end space-y-1">
+                  <span class="text-[9px] text-yellow-400 font-bold">400 CREDITS</span>
+                  <button id="btn-unlock-crusader" class="px-3 py-1.5 bg-yellow-600 hover:bg-yellow-500 text-white text-[10px] font-bold rounded-lg cursor-pointer uppercase min-h-[32px]">Unlock</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- SYSTEMS POWER-UPS -->
+          <div>
+            <h3 class="text-xs font-bold text-pink-400 uppercase tracking-widest mb-2 flex items-center">
+              <span class="w-1 h-3 bg-pink-500 mr-2 rounded-full"></span> 
+              2. Core Ship Enhancements
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+              
+              <!-- Hull Armor level -->
+              <div class="p-3 bg-slate-950/40 border border-slate-900 rounded-xl flex justify-between items-center">
+                <div class="flex flex-col">
+                  <span class="font-bold text-slate-300">HULL STRENGTH</span>
+                  <span class="text-[9px] text-slate-500">LVL: <span id="val-hull-lvl">1</span> / 5</span>
+                </div>
+                <button id="btn-upgrade-hull" class="px-2.5 py-1.5 bg-pink-600 hover:bg-pink-500 text-white text-[10px] font-bold rounded-lg cursor-pointer flex flex-col items-center min-h-[38px] justify-center">
+                  <span>UPGRADE</span>
+                  <span class="text-[8px] text-pink-200 mt-0.5"><span id="cost-hull-up">50</span> CR</span>
+                </button>
+              </div>
+
+              <!-- Shield Power level -->
+              <div class="p-3 bg-slate-950/40 border border-slate-900 rounded-xl flex justify-between items-center">
+                <div class="flex flex-col">
+                  <span class="font-bold text-slate-300">SHIELD FORCE</span>
+                  <span class="text-[9px] text-slate-500">LVL: <span id="val-shield-lvl">1</span> / 5</span>
+                </div>
+                <button id="btn-upgrade-shield" class="px-2.5 py-1.5 bg-pink-600 hover:bg-pink-500 text-white text-[10px] font-bold rounded-lg cursor-pointer flex flex-col items-center min-h-[38px] justify-center">
+                  <span>UPGRADE</span>
+                  <span class="text-[8px] text-pink-200 mt-0.5"><span id="cost-shield-up">60</span> CR</span>
+                </button>
+              </div>
+
+              <!-- Laser damage levels -->
+              <div class="p-3 bg-slate-950/40 border border-slate-900 rounded-xl flex justify-between items-center">
+                <div class="flex flex-col">
+                  <span class="font-bold text-slate-300">BLASTER DAMAGE</span>
+                  <span class="text-[9px] text-slate-500">LVL: <span id="val-weapon-lvl">1</span> / 5</span>
+                </div>
+                <button id="btn-upgrade-weapon" class="px-2.5 py-1.5 bg-pink-600 hover:bg-pink-500 text-white text-[10px] font-bold rounded-lg cursor-pointer flex flex-col items-center min-h-[38px] justify-center">
+                  <span>UPGRADE</span>
+                  <span class="text-[8px] text-pink-200 mt-0.5"><span id="cost-weapon-up">75</span> CR</span>
+                </button>
+              </div>
+
+              <!-- Weapon Multi Shot class -->
+              <div class="p-3 bg-slate-950/40 border border-slate-900 rounded-xl flex justify-between items-center">
+                <div class="flex flex-col">
+                  <span class="font-bold text-slate-300">MULTISHOT LASER</span>
+                  <span class="text-[9px] text-slate-500">Current: <span id="val-laser-class" class="text-cyan-400 font-bold">Single</span></span>
+                </div>
+                <button id="btn-upgrade-laser-class" class="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-[10px] font-bold rounded-lg cursor-pointer flex flex-col items-center min-h-[38px] justify-center">
+                  <span>UPGRADE</span>
+                  <span class="text-[8px] text-purple-200 mt-0.5"><span id="cost-laser-up">3</span> GEMS</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- SPECIAL ABILITIES SHOP -->
+          <div>
+            <h3 class="text-xs font-bold text-yellow-500 uppercase tracking-widest mb-2 flex items-center">
+              <span class="w-1 h-3 bg-yellow-500 mr-2 rounded-full"></span> 
+              3. Defensive Abilities Tech
+            </h3>
+            <div class="grid grid-cols-1 gap-2.5 text-[10px] text-slate-400">
+              <div class="flex justify-between items-center p-3 bg-slate-950/40 border border-slate-900 rounded-xl">
+                <div>
+                  <span class="font-bold text-slate-200 block">MED KIT SYSTEM</span>
+                  <span>Increases hull heal amount to <span id="val-med-heal">50%</span> & lowers cooldown.</span>
+                </div>
+                <button id="btn-upgrade-ability-med" class="px-2.5 py-1.5 bg-yellow-600 hover:bg-yellow-500 text-slate-950 font-bold rounded-lg cursor-pointer min-h-[34px]">
+                  <span id="cost-med-up">40</span> CR
+                </button>
+              </div>
+
+              <div class="flex justify-between items-center p-3 bg-slate-950/40 border border-slate-900 rounded-xl">
+                <div>
+                  <span class="font-bold text-slate-200 block">SUPPORT AUTO-TURRET</span>
+                  <span>Extends drone deploy timer to <span id="val-turret-time">10s</span> & buffs fire rate.</span>
+                </div>
+                <button id="btn-upgrade-ability-turret" class="px-2.5 py-1.5 bg-yellow-600 hover:bg-yellow-500 text-slate-950 font-bold rounded-lg cursor-pointer min-h-[34px]">
+                  <span id="cost-turret-up">50</span> CR
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Footer actions -->
+        <div class="border-t border-slate-900 pt-3 flex space-x-3">
+          <button id="btn-exit-to-menu" class="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-slate-400 font-bold rounded-xl border border-slate-800 uppercase text-xs cursor-pointer min-h-[48px]">
+            MAIN MENU
+          </button>
+          <button id="btn-resume-game" class="flex-[2] py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.3)] uppercase text-xs cursor-pointer min-h-[48px]">
+            RESUME COMBAT
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME OVER SCREEN -->
+    <div id="game-over-screen" class="screen bg-gradient-to-b from-[#0a0505]/95 to-[#130606]/98 z-40">
+      <div class="w-full max-w-sm px-6 flex flex-col items-center justify-center space-y-8 text-center">
+        <!-- Skull Icon frame -->
+        <div class="relative w-20 h-20 flex items-center justify-center animate-bounce duration-[2000ms]">
+          <div class="absolute inset-0 rounded-full border-2 border-rose-500 animate-pulse blur-sm"></div>
+          <svg class="w-10 h-10 text-rose-500 drop-shadow-[0_0_10px_rgba(244,63,94,0.8)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+
+        <div class="space-y-2">
+          <!-- Main label -->
+          <h1 class="text-3xl font-extrabold tracking-tight text-white uppercase drop-shadow-[0_0_12px_rgba(244,63,94,0.7)]">
+            DEFENSE <span class="text-rose-500">BREACHED</span>
+          </h1>
+          <p class="text-xs text-rose-300/80 font-mono tracking-widest uppercase">
+            Planet Core Destroyed
+          </p>
+        </div>
+
+        <!-- Scores and logs box -->
+        <div class="w-full bg-[#1c0c0c]/80 border border-rose-900/40 p-4 rounded-2xl font-mono text-left space-y-2.5">
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-slate-400">FINAL SCORE:</span>
+            <span id="over-score" class="text-white font-bold text-sm">0</span>
+          </div>
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-slate-400">HIGHEST SCORE:</span>
+            <span id="over-high-score" class="text-yellow-400 font-bold">0</span>
+          </div>
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-slate-400">WAVES CONQUERED:</span>
+            <span id="over-wave" class="text-cyan-400 font-bold">1</span>
+          </div>
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-slate-400">HOSTILES ELIMINATED:</span>
+            <span id="over-enemies" class="text-pink-400 font-bold">0</span>
+          </div>
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-slate-400">CREDITS ACQUIRED:</span>
+            <span id="over-credits" class="text-yellow-400 font-bold">0</span>
+          </div>
+        </div>
+
+        <!-- Action column -->
+        <div class="w-full flex flex-col space-y-3">
+          <!-- Restart button -->
+          <button id="btn-restart-game" class="w-full py-4 bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm rounded-xl uppercase tracking-widest font-mono cursor-pointer shadow-[0_0_15px_rgba(244,63,94,0.3)] active:scale-95 min-h-[50px]">
+            LAUNCH RECOVERY VESSEL
+          </button>
+          
+          <!-- Menu button -->
+          <button id="btn-menu-from-over" class="w-full py-3 bg-slate-950 hover:bg-slate-900 text-slate-400 font-bold border border-slate-900 rounded-xl uppercase text-xs cursor-pointer min-h-[48px]">
+            RETURN TO BASE
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gameplay state scripts -->
+    <script type="module" src="/script.js"></script>
+  </body>
+</html>

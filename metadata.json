@@ -1,0 +1,6 @@
+{
+  "name": "Space Defender",
+  "description": "Space Defender is a fast-paced cosmic action game where you pilot a starship to protect your planet and conquer endless waves of enemy ships, alien bugs, and asteroids.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
