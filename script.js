@@ -253,6 +253,12 @@ function showScreen(screenId) {
   const currentScreen = document.getElementById(currentScreenId);
   if (currentScreen) {
     currentScreen.classList.remove('active');
+    const oldScreen = currentScreen;
+    setTimeout(() => {
+      if (!oldScreen.classList.contains('active')) {
+        oldScreen.style.display = 'none';
+      }
+    }, 500);
   }
 
   // Show target screen
@@ -589,6 +595,21 @@ function selectShip(shipType) {
 function createGame() {
   const canvas = document.getElementById('game-canvas');
   const ctx = canvas.getContext('2d');
+
+  // Pre-render deep space nebula onto an offscreen canvas to optimize drawing speed
+  const nebulaCanvas = document.createElement('canvas');
+  const nebSize = 250;
+  nebulaCanvas.width = nebSize * 2;
+  nebulaCanvas.height = nebSize * 2;
+  const nebCtx = nebulaCanvas.getContext('2d');
+  const nebGrad = nebCtx.createRadialGradient(nebSize, nebSize, 0, nebSize, nebSize, nebSize);
+  nebGrad.addColorStop(0, 'rgba(124, 58, 237, 0.12)'); // Purple nebula glow
+  nebGrad.addColorStop(0.5, 'rgba(236, 72, 153, 0.08)'); // Pink nebula glow
+  nebGrad.addColorStop(1, 'transparent');
+  nebCtx.beginPath();
+  nebCtx.arc(nebSize, nebSize, nebSize, 0, Math.PI * 2);
+  nebCtx.fillStyle = nebGrad;
+  nebCtx.fill();
 
   // Game state
   let isRunning = false;
@@ -943,7 +964,7 @@ function createGame() {
   // ==========================================
   function advanceWave() {
     waveState = 'countdown';
-    waveTimer = 180; // 3 seconds screen flash
+    waveTimer = 90; // 1.5 seconds screen flash (much more immediate and dynamic!)
     
     // Waves parameters scaling
     if (wave === 1) {
@@ -1483,6 +1504,7 @@ function createGame() {
         waveSplashTimer = 90; // 1.5 seconds splash alert
         const alertLabel = document.getElementById('hud-alert');
         if (alertLabel) alertLabel.style.opacity = '0';
+        enemySpawnTimer = Math.max(45, 140 - wave * 8); // Trigger immediate spawn!
       }
     } else if (waveState === 'active') {
       // Spawn enemies periodically
@@ -1497,7 +1519,7 @@ function createGame() {
       // Check if wave is completely conquered
       if (spawnedCountThisWave >= currentEnemiesCountToSpawn && enemies.length === 0) {
         waveState = 'cleared';
-        waveTimer = 120; // 2 seconds before next wave countdown
+        waveTimer = 60; // 1 second before next wave countdown (snappier inter-wave transition!)
       }
     } else if (waveState === 'cleared') {
       waveTimer -= delta;
@@ -1820,14 +1842,7 @@ function createGame() {
     // Draw Background Nebulae and Planets
     backgroundObjects.forEach(obj => {
       if (obj.type === 'nebula') {
-        const grad = ctx.createRadialGradient(obj.x, obj.y, 0, obj.x, obj.y, obj.size);
-        grad.addColorStop(0, obj.color1);
-        grad.addColorStop(0.5, obj.color2);
-        grad.addColorStop(1, 'transparent');
-        ctx.beginPath();
-        ctx.arc(obj.x, obj.y, obj.size, 0, Math.PI * 2);
-        ctx.fillStyle = grad;
-        ctx.fill();
+        ctx.drawImage(nebulaCanvas, obj.x - obj.size, obj.y - obj.size, obj.size * 2, obj.size * 2);
       } else if (obj.type === 'planet') {
         ctx.beginPath();
         ctx.arc(obj.x, obj.y, obj.size, 0, Math.PI * 2);
@@ -2522,6 +2537,15 @@ function createGame() {
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchcancel', handleTouchEnd);
+
+      // Cleanup buttons to prevent click accumulation
+      const btnMed = document.getElementById('btn-ability-med');
+      const btnTurret = document.getElementById('btn-ability-turret');
+      const btnOverdrive = document.getElementById('btn-ability-overdrive');
+      if (btnMed) btnMed.removeEventListener('click', triggerMedKit);
+      if (btnTurret) btnTurret.removeEventListener('click', triggerAutoTurret);
+      if (btnOverdrive) btnOverdrive.removeEventListener('click', triggerOverdrive);
     },
 
     syncStats: syncStats
