@@ -75,20 +75,19 @@
           </button>
 
           <!-- Toggle buttons row -->
-          <div class="grid grid-cols-2 gap-3 w-full">
+          <div class="grid grid-cols-3 gap-2 w-full">
             <!-- Audio Button -->
-            <button id="btn-sound-toggle" class="py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-xs rounded-xl border border-slate-800 transition duration-200 cursor-pointer flex items-center justify-center space-x-2 min-h-[48px]">
-              <svg id="sound-on-icon" class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 18.75V5.25L7.75 9.5H4.5v5h3.25L12 18.75z" />
-              </svg>
-              <svg id="sound-off-icon" class="w-4 h-4 text-slate-500 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 9.75L19.5 12m0 0l2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6L4.5 9.5H1.5v5h3l4.5 3.75V5.25z" />
-              </svg>
+            <button id="btn-sound-toggle" class="py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-[10px] rounded-xl border border-slate-800 transition duration-200 cursor-pointer flex flex-col items-center justify-center min-h-[48px]">
               <span id="sound-text">SOUND: ON</span>
             </button>
 
+            <!-- Settings Button -->
+            <button id="btn-main-settings" class="py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-[10px] rounded-xl border border-slate-800 transition duration-200 cursor-pointer flex flex-col items-center justify-center min-h-[48px]">
+              <span>SETTINGS</span>
+            </button>
+
             <!-- Instructions Toggle -->
-            <button id="btn-how-to-play" class="py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-xs rounded-xl border border-slate-800 transition duration-200 cursor-pointer flex items-center justify-center space-x-2 min-h-[48px]">
+            <button id="btn-how-to-play" class="py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-[10px] rounded-xl border border-slate-800 transition duration-200 cursor-pointer flex flex-col items-center justify-center min-h-[48px]">
               <span>HOW TO PLAY</span>
             </button>
           </div>
@@ -97,32 +96,57 @@
     </div>
 
     <!-- INSTRUCTIONS MODAL -->
-    <div id="instructions-modal" class="hidden fixed inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-6">
-      <div class="bg-[#0b0b18] border border-cyan-500/30 rounded-2xl p-6 w-full max-w-sm text-center flex flex-col space-y-5 neon-box-blue">
-        <h3 class="text-xl font-bold text-white tracking-wide uppercase">Mission Briefing</h3>
-        
-        <div class="text-left space-y-4 text-xs leading-relaxed text-slate-300 font-mono">
-          <div class="flex items-start space-x-3">
-            <span class="text-cyan-400 font-bold">1.</span>
-            <p>Your spaceship <span class="text-cyan-400">automatically aims and fires</span> at the nearest enemies. Focus on dodging hazard paths!</p>
+    <div id="instructions-modal" class="hidden fixed inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-4">
+      <div class="bg-[#080814] border-2 border-cyan-500/30 rounded-2xl p-5 w-full max-w-xl text-center flex flex-col space-y-4 shadow-[0_0_30px_rgba(6,182,212,0.15)] font-mono neon-box-blue">
+        <!-- Header -->
+        <div class="flex justify-between items-center border-b border-slate-900 pb-2.5">
+          <div class="text-left">
+            <h3 class="text-sm font-extrabold text-cyan-400 tracking-widest uppercase">COMBAT TRAINING INITIATIVE</h3>
+            <p id="tutorial-step-indicator" class="text-[10px] text-pink-500 font-bold tracking-wider mt-0.5 uppercase">Step 1 of 6: Movement</p>
           </div>
-          <div class="flex items-start space-x-3">
-            <span class="text-pink-500 font-bold">2.</span>
-            <p>Drag anywhere on screen to guide your ship, or use <span class="text-pink-500">WASD / Arrow Keys</span> on keyboards.</p>
-          </div>
-          <div class="flex items-start space-x-3">
-            <span class="text-yellow-400 font-bold">3.</span>
-            <p>Do NOT let incoming enemy units or asteroids crash into <span class="text-yellow-400">the Planet</span> at the bottom!</p>
-          </div>
-          <div class="flex items-start space-x-3">
-            <span class="text-green-400 font-bold">4.</span>
-            <p>Collect floating credits & gems. Tap bottom special keys to trigger <span class="text-green-400">Shields, Turrets or Overdrives</span>.</p>
+          <!-- Progress Indicator (Dot/Bar grid) -->
+          <div class="flex space-x-1" id="tutorial-progress-dots">
+            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-800"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-800"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-800"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-800"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-800"></span>
           </div>
         </div>
+        
+        <!-- Interactive Canvas Area -->
+        <div class="relative w-full overflow-hidden bg-slate-950/40 rounded-xl border border-cyan-500/20 flex flex-col items-center justify-center">
+          <canvas id="tutorial-canvas" width="480" height="260" class="w-full bg-[#030309] block"></canvas>
+        </div>
 
-        <button id="btn-close-instructions" class="py-3 bg-cyan-500 text-slate-950 font-bold text-sm rounded-xl cursor-pointer hover:bg-cyan-400 min-h-[48px]">
-          UNDERSTOOD
-        </button>
+        <!-- Glowing Interactive Keycap Panel (Drawn beautifully beneath canvas) -->
+        <div id="tutorial-keycaps" class="flex justify-center items-center h-10 space-x-2 text-[10px] select-none font-bold">
+          <!-- Will be dynamically populated with keys for the active tutorial step -->
+        </div>
+
+        <!-- Caption (Exactly 1 sentence) -->
+        <div id="tutorial-caption" class="text-xs md:text-sm text-slate-300 tracking-wide font-normal px-4 py-3 bg-slate-950/40 border border-slate-900/60 rounded-xl leading-relaxed text-center min-h-[48px] flex items-center justify-center">
+          Move your ship to dodge incoming threats.
+        </div>
+
+        <!-- Footer Control Row -->
+        <div class="flex justify-between items-center w-full pt-1">
+          <!-- Left side: Skip -->
+          <button id="btn-tutorial-skip" class="px-4 py-2.5 bg-slate-950 hover:bg-slate-900 text-slate-500 hover:text-slate-400 hover:border-slate-800 border border-transparent text-[10px] font-bold rounded-lg cursor-pointer uppercase tracking-wider transition-all min-w-[70px]">
+            Skip
+          </button>
+          
+          <!-- Right side: Nav controls -->
+          <div class="flex space-x-2">
+            <button id="btn-tutorial-prev" class="px-4 py-2.5 bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 text-[10px] font-bold rounded-lg cursor-pointer uppercase tracking-wider transition-all hidden min-w-[75px]">
+              PREV
+            </button>
+            <button id="btn-tutorial-next" class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-[10px] font-extrabold rounded-lg cursor-pointer uppercase tracking-wider transition-all shadow-[0_0_12px_rgba(6,182,212,0.25)] min-w-[90px]">
+              NEXT
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -134,7 +158,7 @@
       <!-- HEADS-UP DISPLAY (HUD) -->
       <div class="absolute inset-0 pointer-events-none flex flex-col justify-between p-4 font-mono select-none">
         <!-- Compact Top Bar HUD -->
-        <div id="top-hud-bar" class="fixed top-4 left-4 right-4 bg-slate-950/80 border border-cyan-500/30 rounded-2xl p-2 px-3.5 flex flex-col space-y-1.5 pointer-events-auto z-30 shadow-[0_0_15px_rgba(6,182,212,0.15)] backdrop-blur-md">
+        <div id="top-hud-bar" class="fixed top-0 left-0 right-0 w-full bg-slate-950/90 border-b border-cyan-500/20 p-2 px-4 flex flex-col space-y-1.5 pointer-events-auto z-30 shadow-[0_4px_15px_rgba(0,0,0,0.5)] backdrop-blur-md">
           <!-- Row 1: Counters and controls -->
           <div class="w-full flex items-center justify-between flex-wrap gap-y-1">
             <!-- Stats Left (Score & Hi-Score) -->
@@ -465,6 +489,77 @@
             </div>
           </div>
 
+          <!-- ADVANCED OFFENSE & UTILITY SHOP -->
+          <div>
+            <h3 class="text-xs font-bold text-teal-400 uppercase tracking-widest mb-2 flex items-center">
+              <span class="w-1 h-3 bg-teal-500 mr-2 rounded-full"></span> 
+              4. Advanced Offense & Utility
+            </h3>
+            <div class="grid grid-cols-1 gap-2.5 text-[10px] text-slate-400">
+              
+              <!-- Engine Tuning -->
+              <div class="flex justify-between items-center p-3 bg-slate-950/40 border border-slate-900 rounded-xl">
+                <div>
+                  <span class="font-bold text-slate-200 block">ENGINE TUNING (+Movement Speed)</span>
+                  <span>Increases spaceship speed & agility. LVL: <span id="val-speed-lvl">1</span> / 5</span>
+                </div>
+                <button id="btn-upgrade-speed" class="px-2.5 py-1.5 bg-teal-600 hover:bg-teal-500 text-slate-950 font-bold rounded-lg cursor-pointer flex flex-col items-center justify-center min-h-[34px]">
+                  <span>UPGRADE</span>
+                  <span class="text-[8px] text-teal-900"><span id="cost-speed-up">50</span> CR</span>
+                </button>
+              </div>
+
+              <!-- Rapid Fire -->
+              <div class="flex justify-between items-center p-3 bg-slate-950/40 border border-slate-900 rounded-xl">
+                <div>
+                  <span class="font-bold text-slate-200 block">RAPID FIRE CHARGER (+Fire Rate)</span>
+                  <span>Speeds up primary weapon automatic fire interval. LVL: <span id="val-firerate-lvl">1</span> / 5</span>
+                </div>
+                <button id="btn-upgrade-firerate" class="px-2.5 py-1.5 bg-teal-600 hover:bg-teal-500 text-slate-950 font-bold rounded-lg cursor-pointer flex flex-col items-center justify-center min-h-[34px]">
+                  <span>UPGRADE</span>
+                  <span class="text-[8px] text-teal-900"><span id="cost-firerate-up">60</span> CR</span>
+                </button>
+              </div>
+
+              <!-- Critical Core -->
+              <div class="flex justify-between items-center p-3 bg-slate-950/40 border border-slate-900 rounded-xl">
+                <div>
+                  <span class="font-bold text-slate-200 block">CRITICAL CORE (+Critical Damage)</span>
+                  <span>Gives a chance to deal 200% critical damage! LVL: <span id="val-crit-lvl">1</span> / 5</span>
+                </div>
+                <button id="btn-upgrade-crit" class="px-2.5 py-1.5 bg-teal-600 hover:bg-teal-500 text-slate-950 font-bold rounded-lg cursor-pointer flex flex-col items-center justify-center min-h-[34px]">
+                  <span>UPGRADE</span>
+                  <span class="text-[8px] text-teal-900"><span id="cost-crit-up">70</span> CR</span>
+                </button>
+              </div>
+
+              <!-- Homing Missiles -->
+              <div class="flex justify-between items-center p-3 bg-slate-950/40 border border-slate-900 rounded-xl">
+                <div>
+                  <span class="font-bold text-slate-200 block">AUTO-MISSILE LAUNCHER (Missile Upgrade)</span>
+                  <span>Fires self-seeking splash missiles. LVL: <span id="val-missile-lvl">0</span> / 5</span>
+                </div>
+                <button id="btn-upgrade-missile" class="px-2.5 py-1.5 bg-teal-600 hover:bg-teal-500 text-slate-950 font-bold rounded-lg cursor-pointer flex flex-col items-center justify-center min-h-[34px]">
+                  <span>UPGRADE</span>
+                  <span class="text-[8px] text-teal-900"><span id="cost-missile-up">80</span> CR</span>
+                </button>
+              </div>
+
+              <!-- Cooldown Capacitor -->
+              <div class="flex justify-between items-center p-3 bg-slate-950/40 border border-slate-900 rounded-xl">
+                <div>
+                  <span class="font-bold text-slate-200 block">COOLDOWN CAPACITOR (-Cooldowns)</span>
+                  <span>Reduces cooldown for all special abilities. LVL: <span id="val-cooldown-lvl">1</span> / 5</span>
+                </div>
+                <button id="btn-upgrade-cooldown" class="px-2.5 py-1.5 bg-teal-600 hover:bg-teal-500 text-slate-950 font-bold rounded-lg cursor-pointer flex flex-col items-center justify-center min-h-[34px]">
+                  <span>UPGRADE</span>
+                  <span class="text-[8px] text-teal-900"><span id="cost-cooldown-up">50</span> CR</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+
         </div>
 
         <!-- Footer actions -->
@@ -528,14 +623,108 @@
         <div class="w-full flex flex-col space-y-3">
           <!-- Restart button -->
           <button id="btn-restart-game" class="w-full py-4 bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm rounded-xl uppercase tracking-widest font-mono cursor-pointer shadow-[0_0_15px_rgba(244,63,94,0.3)] active:scale-95 min-h-[50px]">
-            LAUNCH RECOVERY VESSEL
+            ▶ PLAY AGAIN
           </button>
           
           <!-- Menu button -->
           <button id="btn-menu-from-over" class="w-full py-3 bg-slate-950 hover:bg-slate-900 text-slate-400 font-bold border border-slate-900 rounded-xl uppercase text-xs cursor-pointer min-h-[48px]">
-            RETURN TO BASE
+            MAIN MENU
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- REAL PAUSE MODAL -->
+    <div id="pause-modal" class="fixed inset-0 bg-[#020205]/90 backdrop-blur-sm z-50 hidden flex flex-col justify-center items-center">
+      <div class="w-full max-w-xs px-6 py-8 bg-[#0a0a18] border border-cyan-500/30 rounded-2xl flex flex-col space-y-6 text-center shadow-[0_0_20px_rgba(6,182,212,0.15)] animate-fade-in">
+        <h2 class="text-2xl font-extrabold text-cyan-400 tracking-wider font-sans uppercase">
+          COMBAT PAUSED
+        </h2>
+        
+        <div class="flex flex-col space-y-3">
+          <!-- Resume -->
+          <button id="btn-pause-resume" class="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold rounded-xl uppercase text-xs tracking-wider cursor-pointer shadow-[0_0_10px_rgba(6,182,212,0.2)] active:scale-95 transition min-h-[44px]">
+            RESUME
+          </button>
+          
+          <!-- Restart -->
+          <button id="btn-pause-restart" class="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-extrabold rounded-xl uppercase text-xs tracking-wider cursor-pointer active:scale-95 transition min-h-[44px]">
+            RESTART MISSION
+          </button>
+          
+          <!-- Upgrade Shop -->
+          <button id="btn-pause-shop" class="w-full py-3 bg-violet-600 hover:bg-violet-500 text-white font-extrabold rounded-xl uppercase text-xs tracking-wider cursor-pointer active:scale-95 transition min-h-[44px]">
+            UPGRADE HANGAR
+          </button>
+          
+          <!-- Settings -->
+          <button id="btn-pause-settings" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold rounded-xl uppercase text-xs tracking-wider cursor-pointer active:scale-95 transition min-h-[44px]">
+            SETTINGS
+          </button>
+          
+          <!-- Main Menu -->
+          <button id="btn-pause-menu" class="w-full py-3 bg-slate-950 hover:bg-slate-900 text-slate-400 font-extrabold border border-slate-900 rounded-xl uppercase text-xs tracking-wider cursor-pointer active:scale-95 transition min-h-[44px]">
+            MAIN MENU
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="fixed inset-0 bg-[#020205]/92 backdrop-blur-sm z-[60] hidden flex flex-col justify-center items-center">
+      <div class="w-full max-w-sm p-6 bg-[#090915] border border-purple-500/30 rounded-2xl flex flex-col space-y-6 shadow-[0_0_20px_rgba(168,85,247,0.15)]">
+        <div class="flex justify-between items-center border-b border-slate-900 pb-3">
+          <h2 class="text-xl font-bold text-purple-400 tracking-wider uppercase font-sans">
+            SYSTEM SETTINGS
+          </h2>
+          <button id="btn-close-settings" class="text-slate-400 hover:text-white cursor-pointer transition text-lg">&times;</button>
+        </div>
+        
+        <div class="space-y-5 text-left font-mono text-xs">
+          <!-- Music Volume Slider -->
+          <div class="space-y-2">
+            <div class="flex justify-between">
+              <span class="text-slate-300 uppercase tracking-wider">MUSIC VOLUME</span>
+              <span id="val-music-volume" class="text-purple-400">50%</span>
+            </div>
+            <input type="range" id="slider-music-volume" min="0" max="100" value="50" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-500">
+          </div>
+
+          <!-- SFX Volume Slider -->
+          <div class="space-y-2">
+            <div class="flex justify-between">
+              <span class="text-slate-300 uppercase tracking-wider">SFX VOLUME</span>
+              <span id="val-sfx-volume" class="text-cyan-400">60%</span>
+            </div>
+            <input type="range" id="slider-sfx-volume" min="0" max="100" value="60" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+          </div>
+
+          <!-- Fullscreen Toggle -->
+          <div class="flex justify-between items-center py-2 border-t border-b border-slate-900">
+            <span class="text-slate-300 uppercase tracking-wider">FULLSCREEN</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="toggle-fullscreen" class="sr-only peer">
+              <div class="w-9 h-5 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+            </label>
+          </div>
+
+          <!-- Difficulty Selector -->
+          <div class="space-y-2">
+            <span class="text-slate-300 uppercase tracking-wider block">DIFFICULTY LEVEL</span>
+            <div class="grid grid-cols-3 gap-2">
+              <button id="btn-diff-easy" class="py-2 bg-slate-800 text-slate-400 font-bold rounded-lg border border-transparent cursor-pointer uppercase transition text-center text-[10px]">EASY</button>
+              <button id="btn-diff-normal" class="py-2 bg-purple-600/20 text-purple-400 font-bold rounded-lg border border-purple-500/40 cursor-pointer uppercase transition text-center text-[10px]">NORMAL</button>
+              <button id="btn-diff-hard" class="py-2 bg-slate-800 text-slate-400 font-bold rounded-lg border border-transparent cursor-pointer uppercase transition text-center text-[10px]">HARD</button>
+            </div>
+            <div class="text-[10px] text-slate-500 mt-1 leading-relaxed">
+              * HARD: Faster hostiles, 1.4x HP, but reduced credit payouts.
+            </div>
+          </div>
+        </div>
+
+        <button id="btn-save-settings" class="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl uppercase text-xs tracking-widest cursor-pointer shadow-[0_0_15px_rgba(168,85,247,0.3)] active:scale-95 transition min-h-[44px]">
+          APPLY CHANGES
+        </button>
       </div>
     </div>
 
