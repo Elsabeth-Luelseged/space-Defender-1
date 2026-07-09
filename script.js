@@ -13,6 +13,7 @@ class SoundEffectsManager {
     this.musicVolume = 0.5;
     this.sfxVolume = 0.6;
     this.difficulty = 'normal'; // 'easy', 'normal', 'hard'
+    this.musicPaused = false;
 
     // Music scheduling & state
     this.musicIntervalId = null;
@@ -43,6 +44,7 @@ class SoundEffectsManager {
     this.stopMusic();
 
     this.currentTrackType = trackType;
+    this.musicPaused = false;
     let bpm = 110;
     let scale = [130.81, 155.56, 196.00, 233.08]; // C3, Eb3, G3, Bb3 (C-Minor arpeggio)
     let pattern = [0, 1, 2, 3, 2, 1, 0, 3];
@@ -102,6 +104,62 @@ class SoundEffectsManager {
       this.musicIntervalId = null;
     }
     this.currentTrackType = null;
+    this.musicPaused = false;
+  }
+
+  pauseMusic() {
+    if (this.musicIntervalId) {
+      clearInterval(this.musicIntervalId);
+      this.musicIntervalId = null;
+      this.musicPaused = true;
+    }
+  }
+
+  resumeMusic() {
+    if (this.musicPaused && this.currentTrackType) {
+      this.startMusic(this.currentTrackType);
+      this.musicPaused = false;
+    }
+  }
+
+  playUIHover() {
+    if (!this.enabled) return;
+    this.init();
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.05);
+      gain.gain.setValueAtTime(0.02 * this.sfxVolume, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.05);
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  playUIClick() {
+    if (!this.enabled) return;
+    this.init();
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(220, this.ctx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.05 * this.sfxVolume, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.08);
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   playLaser() {
@@ -289,8 +347,14 @@ let playerStats = {
   // AUDIO & DIFFICULTY SETTINGS
   musicVolume: 50,
   sfxVolume: 60,
+  mute: false,
   difficulty: 'normal',
   fullscreen: false,
+  screenShakeEnabled: true,
+  particleQuality: 'high',
+  mouseSensitivity: 13,
+  reduceFlashing: false,
+  uiScale: 100,
   
   unlockedShips: ['defender'], // 'defender', 'vulture', 'crusader'
   equippedShip: 'defender'
@@ -426,7 +490,20 @@ function initMenuSystem() {
   const btnDiffNormal = document.getElementById('btn-diff-normal');
   const btnDiffHard = document.getElementById('btn-diff-hard');
 
+  // New accessibility / optimization settings elements
+  const toggleMute = document.getElementById('toggle-mute');
+  const toggleScreenShake = document.getElementById('toggle-screen-shake');
+  const btnParticleLow = document.getElementById('btn-particle-low');
+  const btnParticleMedium = document.getElementById('btn-particle-medium');
+  const btnParticleHigh = document.getElementById('btn-particle-high');
+  const sliderMouseSensitivity = document.getElementById('slider-mouse-sensitivity');
+  const valMouseSensitivity = document.getElementById('val-mouse-sensitivity');
+  const toggleReduceFlashing = document.getElementById('toggle-reduce-flashing');
+  const sliderUiScale = document.getElementById('slider-ui-scale');
+  const valUiScale = document.getElementById('val-ui-scale');
+
   let selectedDifficulty = playerStats.difficulty || 'normal';
+  let selectedParticleQuality = playerStats.particleQuality || 'high';
 
   // Apply visual button state for difficulty select
   function renderDifficultySelection(diff) {
@@ -438,6 +515,7 @@ function initMenuSystem() {
     };
     ['easy', 'normal', 'hard'].forEach(d => {
       const b = btnMap[d];
+      if (!b) return;
       if (d === diff) {
         b.className = "py-2 bg-purple-600/20 text-purple-400 font-bold rounded-lg border border-purple-500/40 cursor-pointer uppercase transition text-center text-[10px]";
       } else {
@@ -446,14 +524,79 @@ function initMenuSystem() {
     });
   }
 
+  // Apply visual button state for particle quality select
+  function renderParticleQualitySelection(quality) {
+    selectedParticleQuality = quality;
+    const btnMap = {
+      low: btnParticleLow,
+      medium: btnParticleMedium,
+      high: btnParticleHigh
+    };
+    ['low', 'medium', 'high'].forEach(q => {
+      const b = btnMap[q];
+      if (!b) return;
+      if (q === quality) {
+        b.className = "py-1.5 bg-purple-600/20 text-purple-400 font-bold rounded-lg border border-purple-500/40 cursor-pointer uppercase transition text-center text-[9px]";
+      } else {
+        b.className = "py-1.5 bg-slate-800 text-slate-400 font-bold rounded-lg border border-transparent cursor-pointer uppercase transition text-center text-[9px]";
+      }
+    });
+  }
+
+  // Engine applying mechanism
+  function applySettingsToEngine() {
+    sounds.musicVolume = playerStats.musicVolume / 100;
+    sounds.sfxVolume = playerStats.sfxVolume / 100;
+    sounds.enabled = !playerStats.mute;
+    
+    if (playerStats.mute) {
+      sounds.stopMusic();
+    } else {
+      if (currentGameInstance && !currentGameInstance.isPaused() && currentScreenId === 'gameplay-container') {
+        sounds.resumeMusic();
+      }
+    }
+
+    const scale = (playerStats.uiScale || 100) / 100;
+    document.documentElement.style.setProperty('--ui-scale-factor', scale);
+    document.body.style.transform = scale === 1 ? "" : `scale(${scale})`;
+    document.body.style.transformOrigin = 'center center';
+
+    updateSoundToggleButton();
+  }
+
+  function updateSoundToggleButton() {
+    const soundText = document.getElementById('sound-text');
+    if (soundText) {
+      soundText.innerText = sounds.enabled ? "SOUND: ON" : "SOUND: OFF";
+    }
+  }
+
   // Populate settings fields from stats
   function populateSettingsUI() {
     sliderMusic.value = playerStats.musicVolume;
     valMusic.innerText = playerStats.musicVolume + "%";
     sliderSfx.value = playerStats.sfxVolume;
     valSfx.innerText = playerStats.sfxVolume + "%";
+    
+    if (toggleMute) toggleMute.checked = playerStats.mute || false;
     toggleFullscreenBox.checked = playerStats.fullscreen;
+    if (toggleScreenShake) toggleScreenShake.checked = playerStats.screenShakeEnabled !== false;
+    
     renderDifficultySelection(playerStats.difficulty || 'normal');
+    renderParticleQualitySelection(playerStats.particleQuality || 'high');
+    
+    if (sliderMouseSensitivity) {
+      sliderMouseSensitivity.value = playerStats.mouseSensitivity !== undefined ? playerStats.mouseSensitivity : 13;
+      valMouseSensitivity.innerText = ((playerStats.mouseSensitivity !== undefined ? playerStats.mouseSensitivity : 13) / 10).toFixed(2) + "x";
+    }
+    
+    if (toggleReduceFlashing) toggleReduceFlashing.checked = playerStats.reduceFlashing || false;
+    
+    if (sliderUiScale) {
+      sliderUiScale.value = playerStats.uiScale !== undefined ? playerStats.uiScale : 100;
+      valUiScale.innerText = (playerStats.uiScale !== undefined ? playerStats.uiScale : 100) + "%";
+    }
   }
 
   // Open settings
@@ -467,7 +610,9 @@ function initMenuSystem() {
   }
 
   btnMainSettings.addEventListener('click', openSettings);
-  btnPauseSettings.addEventListener('click', openSettings);
+  btnPauseSettings.addEventListener('click', () => {
+    executePauseAction(btnPauseSettings, openSettings);
+  });
   btnCloseSettings.addEventListener('click', closeSettings);
 
   // Live slider feedback
@@ -484,6 +629,18 @@ function initMenuSystem() {
     // Play quick laser beep to sample volume
     sounds.playLaser();
   });
+
+  if (sliderMouseSensitivity) {
+    sliderMouseSensitivity.addEventListener('input', (e) => {
+      valMouseSensitivity.innerText = (e.target.value / 10).toFixed(2) + "x";
+    });
+  }
+
+  if (sliderUiScale) {
+    sliderUiScale.addEventListener('input', (e) => {
+      valUiScale.innerText = e.target.value + "%";
+    });
+  }
 
   toggleFullscreenBox.addEventListener('change', (e) => {
     const isChecked = e.target.checked;
@@ -504,16 +661,23 @@ function initMenuSystem() {
   btnDiffNormal.addEventListener('click', () => renderDifficultySelection('normal'));
   btnDiffHard.addEventListener('click', () => renderDifficultySelection('hard'));
 
+  if (btnParticleLow) btnParticleLow.addEventListener('click', () => renderParticleQualitySelection('low'));
+  if (btnParticleMedium) btnParticleMedium.addEventListener('click', () => renderParticleQualitySelection('medium'));
+  if (btnParticleHigh) btnParticleHigh.addEventListener('click', () => renderParticleQualitySelection('high'));
+
   btnSaveSettings.addEventListener('click', () => {
     playerStats.musicVolume = parseInt(sliderMusic.value);
     playerStats.sfxVolume = parseInt(sliderSfx.value);
+    if (toggleMute) playerStats.mute = toggleMute.checked;
     playerStats.fullscreen = toggleFullscreenBox.checked;
+    if (toggleScreenShake) playerStats.screenShakeEnabled = toggleScreenShake.checked;
+    playerStats.particleQuality = selectedParticleQuality;
     playerStats.difficulty = selectedDifficulty;
+    if (sliderMouseSensitivity) playerStats.mouseSensitivity = parseInt(sliderMouseSensitivity.value);
+    if (toggleReduceFlashing) playerStats.reduceFlashing = toggleReduceFlashing.checked;
+    if (sliderUiScale) playerStats.uiScale = parseInt(sliderUiScale.value);
 
-    sounds.musicVolume = playerStats.musicVolume / 100;
-    sounds.sfxVolume = playerStats.sfxVolume / 100;
-    sounds.difficulty = playerStats.difficulty;
-
+    applySettingsToEngine();
     saveProgress();
     closeSettings();
     sounds.playPowerUp();
@@ -533,12 +697,10 @@ function initMenuSystem() {
   // Sound Control toggle
   btnSound.addEventListener('click', () => {
     const isEnabled = sounds.toggle();
-    const soundText = document.getElementById('sound-text');
-    if (isEnabled) {
-      soundText.innerText = "SOUND: ON";
-    } else {
-      soundText.innerText = "SOUND: OFF";
-    }
+    playerStats.mute = !isEnabled;
+    saveProgress();
+    updateSoundToggleButton();
+    if (toggleMute) toggleMute.checked = playerStats.mute;
   });
 
   // Instructions Dialog
@@ -546,44 +708,149 @@ function initMenuSystem() {
     startTutorial();
   });
 
-  // PAUSE MODAL OPERATIONS
+  // PAUSE MODAL OPERATIONS & DECORATORS
+  const pauseButtons = [
+    { element: btnPauseResume, color: 'rgba(6, 182, 212, 0.8)' },
+    { element: btnPauseRestart, color: 'rgba(244, 63, 94, 0.8)' },
+    { element: btnPauseShop, color: 'rgba(139, 92, 246, 0.8)' },
+    { element: btnPauseSettings, color: 'rgba(100, 116, 139, 0.8)' },
+    { element: btnPauseMenu, color: 'rgba(148, 163, 184, 0.4)' }
+  ];
+
+  pauseButtons.forEach(({ element, color }) => {
+    if (!element) return;
+    
+    element.style.transition = "transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease-out, filter 0.15s ease-out";
+    element.style.transformOrigin = "center";
+    
+    const handleHoverStart = () => {
+      element.style.transform = "scale(1.05)";
+      element.style.boxShadow = `0 0 15px ${color}`;
+      element.style.filter = "brightness(1.15)";
+      sounds.playUIHover();
+    };
+    
+    const handleHoverEnd = () => {
+      element.style.transform = "scale(1)";
+      element.style.boxShadow = "none";
+      element.style.filter = "none";
+    };
+    
+    element.addEventListener('mouseenter', handleHoverStart);
+    element.addEventListener('mouseleave', handleHoverEnd);
+    element.addEventListener('focus', handleHoverStart);
+    element.addEventListener('blur', handleHoverEnd);
+  });
+
+  let isActionProcessing = false;
+
+  function executePauseAction(buttonElement, callback) {
+    if (isActionProcessing) return;
+    isActionProcessing = true;
+    
+    sounds.playUIClick();
+    buttonElement.style.transform = "scale(0.95)";
+    
+    setTimeout(() => {
+      buttonElement.style.transform = "scale(1.05)";
+      try {
+        callback();
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setTimeout(() => {
+          isActionProcessing = false;
+        }, 150);
+      }
+    }, 100);
+  }
+
   btnPause.addEventListener('click', () => {
     if (currentGameInstance) {
       currentGameInstance.pause();
       pauseModal.classList.remove('hidden');
+      btnPauseResume.focus();
     }
   });
 
   btnPauseResume.addEventListener('click', () => {
-    if (currentGameInstance) {
-      currentGameInstance.resume();
-      pauseModal.classList.add('hidden');
-    }
+    executePauseAction(btnPauseResume, () => {
+      if (currentGameInstance) {
+        currentGameInstance.resume();
+        pauseModal.classList.add('hidden');
+        const canvas = document.getElementById('game-canvas');
+        if (canvas) canvas.focus();
+      }
+    });
   });
 
   btnPauseRestart.addEventListener('click', () => {
-    pauseModal.classList.add('hidden');
-    showScreen('gameplay-container');
-    if (currentGameInstance) {
-      currentGameInstance.destroy();
-    }
-    currentGameInstance = createGame();
-    currentGameInstance.start();
+    executePauseAction(btnPauseRestart, () => {
+      if (confirm("Restart the current mission? Your score and credits earned during this run will be reset.")) {
+        if (currentGameInstance) {
+          const earned = typeof currentGameInstance.getCreditsEarnedInRun === 'function' ? currentGameInstance.getCreditsEarnedInRun() : 0;
+          playerStats.credits = Math.max(0, playerStats.credits - earned);
+          saveProgress();
+          currentGameInstance.destroy();
+        }
+        pauseModal.classList.add('hidden');
+        showScreen('gameplay-container');
+        currentGameInstance = createGame();
+        currentGameInstance.start();
+      }
+    });
   });
 
   btnPauseShop.addEventListener('click', () => {
-    pauseModal.classList.add('hidden');
-    openUpgradesOverlay();
+    executePauseAction(btnPauseShop, () => {
+      pauseModal.classList.add('hidden');
+      openUpgradesOverlay();
+    });
   });
 
   btnPauseMenu.addEventListener('click', () => {
-    pauseModal.classList.add('hidden');
-    if (currentGameInstance) {
-      currentGameInstance.destroy();
-      currentGameInstance = null;
-    }
-    showScreen('main-menu');
+    executePauseAction(btnPauseMenu, () => {
+      if (confirm("Return to the Main Menu? Your current mission progress will be lost.")) {
+        pauseModal.classList.add('hidden');
+        if (currentGameInstance) {
+          currentGameInstance.destroy();
+          currentGameInstance = null;
+        }
+        sounds.stopMusic();
+        showScreen('main-menu');
+      }
+    });
   });
+
+  // ESC key opens and closes pause modal
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' || e.key === 'Esc') {
+      if (!settingsModal.classList.contains('hidden')) {
+        closeSettings();
+        return;
+      }
+      
+      if (currentScreenId === 'gameplay-container') {
+        if (pauseModal.classList.contains('hidden')) {
+          if (currentGameInstance) {
+            currentGameInstance.pause();
+            pauseModal.classList.remove('hidden');
+            btnPauseResume.focus();
+          }
+        } else {
+          if (currentGameInstance) {
+            currentGameInstance.resume();
+            pauseModal.classList.add('hidden');
+            const canvas = document.getElementById('game-canvas');
+            if (canvas) canvas.focus();
+          }
+        }
+      }
+    }
+  });
+
+  // Initial immediate application of progress-saved volume / settings
+  applySettingsToEngine();
 
   // Upgrades Hangar buttons
   btnResumeFromShop.addEventListener('click', () => {
@@ -1193,7 +1460,7 @@ function createGame() {
     const dy = curY - touchStartY;
     
     // Sensitivity factor prevents the player's finger from blocking the view of the ship.
-    const sensitivity = 1.35;
+    const sensitivity = (playerStats.mouseSensitivity !== undefined ? playerStats.mouseSensitivity : 13) / 10;
     player.x = playerStartX + dx * sensitivity;
     player.y = playerStartY + dy * sensitivity;
 
@@ -1279,7 +1546,14 @@ function createGame() {
   // 💥 PARTICLE & EFFECT GENERATOR
   // ==========================================
   function spawnParticleBurst(x, y, color, count) {
-    for (let i = 0; i < count; i++) {
+    const quality = playerStats.particleQuality || 'high';
+    let scale = 1.0;
+    if (quality === 'medium') scale = 0.5;
+    else if (quality === 'low') scale = 0.2;
+    
+    const finalCount = Math.max(1, Math.round(count * scale));
+
+    for (let i = 0; i < finalCount; i++) {
       particles.push({
         x: x,
         y: y,
@@ -1306,6 +1580,7 @@ function createGame() {
 
   // Trigger screen shake on impacts
   function triggerScreenShake(power) {
+    if (playerStats.screenShakeEnabled === false) return;
     screenShakeAmount = Math.max(screenShakeAmount, power);
   }
 
@@ -2323,8 +2598,11 @@ function createGame() {
   // Handle taking damage for the Spaceship
   function damagePlayer(dmg) {
     // Set hit flashes
-    screenFlashAlpha = 0.55; // bright translucent red
-    player.flashUntil = Date.now() + 150; // solid white flash for 150ms
+    const reduced = playerStats.reduceFlashing || false;
+    screenFlashAlpha = reduced ? 0.12 : 0.55; // bright translucent red or safe minor flash
+    if (!reduced) {
+      player.flashUntil = Date.now() + 150; // solid white flash for 150ms
+    }
 
     if (player.shield > 0) {
       player.shield -= dmg;
@@ -3165,16 +3443,26 @@ function createGame() {
 
     pause: function() {
       isPaused = true;
+      sounds.pauseMusic();
     },
 
     resume: function() {
       isPaused = false;
       lastTime = 0;
+      sounds.resumeMusic();
     },
 
     destroy: destroyGame,
 
-    syncStats: syncStats
+    syncStats: syncStats,
+
+    getCreditsEarnedInRun: function() {
+      return creditsEarnedInRun;
+    },
+
+    isPaused: function() {
+      return isPaused;
+    }
   };
 }
 
