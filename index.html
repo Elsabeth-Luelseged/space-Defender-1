@@ -155,6 +155,12 @@
       <!-- Fullscreen Game Canvas -->
       <canvas id="game-canvas" class="absolute inset-0 block"></canvas>
 
+      <!-- Alien Core Warning Banner -->
+      <div id="alien-core-warning" class="absolute top-20 left-1/2 -translate-x-1/2 bg-red-950/80 border border-red-500/30 text-red-400 font-mono text-[10px] md:text-xs tracking-widest font-extrabold px-4 py-2 rounded-lg shadow-[0_0_15px_rgba(239,68,68,0.25)] pointer-events-none transition-all duration-300 transform scale-95 opacity-0 z-30 flex items-center space-x-2">
+        <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+        <span>WARNING: ALIEN CORE DETECTED!</span>
+      </div>
+
       <!-- HEADS-UP DISPLAY (HUD) -->
       <div class="absolute inset-0 pointer-events-none flex flex-col justify-between p-4 font-mono select-none">
         <!-- Compact Top Bar HUD -->

@@ -302,6 +302,41 @@ class SoundEffectsManager {
     osc.start();
     osc.stop(this.ctx.currentTime + 0.3);
   }
+
+  playWarning() {
+    if (!this.enabled) return;
+    this.init();
+    try {
+      const now = this.ctx.currentTime;
+      // Pulse 1
+      const osc1 = this.ctx.createOscillator();
+      const gain1 = this.ctx.createGain();
+      osc1.connect(gain1);
+      gain1.connect(this.ctx.destination);
+      osc1.type = 'sawtooth';
+      osc1.frequency.setValueAtTime(330, now);
+      osc1.frequency.linearRampToValueAtTime(220, now + 0.15);
+      gain1.gain.setValueAtTime(0.25 * this.sfxVolume, now);
+      gain1.gain.linearRampToValueAtTime(0.001, now + 0.15);
+      osc1.start();
+      osc1.stop(now + 0.15);
+
+      // Pulse 2 (delayed slightly)
+      const osc2 = this.ctx.createOscillator();
+      const gain2 = this.ctx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(this.ctx.destination);
+      osc2.type = 'sawtooth';
+      osc2.frequency.setValueAtTime(330, now + 0.18);
+      osc2.frequency.linearRampToValueAtTime(220, now + 0.33);
+      gain2.gain.setValueAtTime(0.25 * this.sfxVolume, now + 0.18);
+      gain2.gain.linearRampToValueAtTime(0.001, now + 0.33);
+      osc2.start();
+      osc2.stop(now + 0.33);
+    } catch (e) {
+      console.log(e);
+    }
+  }
 }
 
 const sounds = new SoundEffectsManager();
@@ -1226,6 +1261,7 @@ function createGame() {
   let currentEnemiesCountToSpawn = 10;
   let spawnedCountThisWave = 0;
   let waveSplashTimer = 0;
+  let alienCoreWarningTimer = 0;
 
   // Starfield parallax background stars
   const stars = [];
@@ -1305,6 +1341,7 @@ function createGame() {
   const particles = [];
   const damageTexts = [];
   const drones = [];
+  const alienCores = [];
 
   let lastMissileFired = 0;
 
@@ -1873,6 +1910,33 @@ function createGame() {
   // 💎 LOOT SYSTEM
   // ==========================================
   function spawnLoot(x, y, enemy) {
+    // 10% chance to drop an Alien Core instead of rewards (non-boss only)
+    if (!enemy.isBoss && Math.random() < 0.10) {
+      // Spawn Alien Core!
+      alienCores.push({
+        x: x,
+        y: y,
+        vx: (Math.random() - 0.5) * 1.5,
+        vy: 1.2 + Math.random() * 0.8,
+        radius: 12,
+        hp: 15 + wave * 3,
+        maxHp: 15 + wave * 3,
+        pulseTime: Math.random() * 100
+      });
+
+      // Show warning banner
+      alienCoreWarningTimer = 120; // ~2 seconds
+      const warningEl = document.getElementById('alien-core-warning');
+      if (warningEl) {
+        warningEl.classList.remove('opacity-0', 'scale-95');
+        warningEl.classList.add('opacity-100', 'scale-100');
+      }
+
+      // Play warning sound
+      sounds.playWarning();
+      return;
+    }
+
     // Determine drops
     const drops = [];
     const creditsToDrop = Math.ceil(enemy.points / 5) + Math.floor(Math.random() * 3);
@@ -1915,6 +1979,7 @@ function createGame() {
         type: d.type,
         value: d.value,
         radius: d.radius || 5,
+        spawnedAt: Date.now(),
         magnetState: false
       });
     });
@@ -2117,6 +2182,18 @@ function createGame() {
       if (screenFlashAlpha < 0) screenFlashAlpha = 0;
     }
 
+    // Decay warning banner timer
+    if (alienCoreWarningTimer > 0) {
+      alienCoreWarningTimer -= delta;
+      if (alienCoreWarningTimer <= 0) {
+        const warningEl = document.getElementById('alien-core-warning');
+        if (warningEl) {
+          warningEl.classList.remove('opacity-100', 'scale-100');
+          warningEl.classList.add('opacity-0', 'scale-95');
+        }
+      }
+    }
+
     if (player.hull <= 0 || planetHealth <= 0) {
       triggerEndGame();
       return;
@@ -2316,6 +2393,17 @@ function createGame() {
         }
       }
 
+      // Collision check with alien cores
+      if (!missileExploded) {
+        for (let j = alienCores.length - 1; j >= 0; j--) {
+          const core = alienCores[j];
+          if (Math.hypot(pm.x - core.x, pm.y - core.y) < core.radius + pm.size) {
+            missileExploded = true;
+            break;
+          }
+        }
+      }
+
       if (missileExploded) {
         // Trigger splash explosion visuals
         spawnParticleBurst(pm.x, pm.y, '#f97316', 30);
@@ -2349,6 +2437,27 @@ function createGame() {
               }
 
               enemies.splice(j, 1);
+            }
+          }
+        }
+
+        // Deal splash damage to all alien cores within 100px range
+        for (let j = alienCores.length - 1; j >= 0; j--) {
+          const core = alienCores[j];
+          const distToMissile = Math.hypot(core.x - pm.x, core.y - pm.y);
+          if (distToMissile < 100) {
+            const splashDamage = pm.dmg * (distToMissile < 35 ? 1.0 : 0.6);
+            core.hp -= splashDamage;
+
+            // Spawn localized splash damage indicator text
+            spawnDamageText(`-${Math.round(splashDamage)}`, core.x, core.y - 15, '#fca5a5');
+
+            if (core.hp <= 0) {
+              spawnParticleBurst(core.x, core.y, '#ef4444', 18);
+              score += 50;
+              spawnDamageText("+50", core.x, core.y - 12, '#38bdf8');
+              spawnDamageText("CORE DESTROYED", core.x, core.y, '#10b981');
+              alienCores.splice(j, 1);
             }
           }
         }
@@ -2521,6 +2630,15 @@ function createGame() {
         item.vx *= 0.96; // decelerate lateral bounce
       }
 
+      // Check credit expiration (disappear after 6 seconds)
+      if (item.type === 'credit') {
+        const age = Date.now() - item.spawnedAt;
+        if (age > 6000) {
+          lootItems.splice(i, 1);
+          continue;
+        }
+      }
+
       // Magnet attraction bounds (160px attraction circle)
       const distToPlayer = Math.hypot(item.x - player.x, item.y - player.y);
       if (distToPlayer < 160) {
@@ -2569,6 +2687,89 @@ function createGame() {
       // Drop off offscreen
       if (item.y > canvas.height + 20) {
         lootItems.splice(i, 1);
+      }
+    }
+
+    // 9.5. Update Alien Cores (dangerous falling cores)
+    for (let i = alienCores.length - 1; i >= 0; i--) {
+      const core = alienCores[i];
+      core.x += core.vx * delta;
+      core.y += core.vy * delta;
+
+      // Pulse scaling animation helper
+      core.pulseTime += 0.1 * delta;
+
+      // Bounce horizontally off the side walls
+      if (core.x < core.radius) {
+        core.x = core.radius;
+        core.vx *= -1;
+      } else if (core.x > canvas.width - core.radius) {
+        core.x = canvas.width - core.radius;
+        core.vx *= -1;
+      }
+
+      // Check collision: Player ship hitting Alien Core
+      const distToPlayer = Math.hypot(core.x - player.x, core.y - player.y);
+      if (distToPlayer < core.radius + player.width / 2) {
+        spawnParticleBurst(core.x, core.y, '#ef4444', 20);
+        sounds.playExplosion();
+        damagePlayer(20);
+        alienCores.splice(i, 1);
+        continue;
+      }
+
+      // Check collision: Player Laser hitting Alien Core
+      for (let j = bullets.length - 1; j >= 0; j--) {
+        const b = bullets[j];
+        const distToBullet = Math.hypot(b.x - core.x, b.y - core.y);
+        if (distToBullet < core.radius + b.size) {
+          bullets.splice(j, 1);
+          core.hp -= b.dmg;
+
+          // Spark feedback particles
+          spawnParticleBurst(b.x, b.y, '#fca5a5', 5);
+
+          if (core.hp <= 0) {
+            // Destroyed! Give bonus
+            spawnParticleBurst(core.x, core.y, '#ef4444', 25);
+            sounds.playExplosion();
+
+            score += 50;
+            spawnDamageText("+50", core.x, core.y - 12, '#38bdf8');
+            spawnDamageText("CORE DESTROYED", core.x, core.y, '#10b981');
+
+            alienCores.splice(i, 1);
+            break;
+          }
+        }
+      }
+
+      if (core.hp <= 0) continue;
+
+      // Check collision: Reaches bottom (Crashes into planet)
+      const planetBoundary = canvas.height - 25;
+      if (core.y >= planetBoundary) {
+        // Reducer amount: 5 to 10%
+        const integrityLoss = Math.floor(Math.random() * 6) + 5; // 5% to 10%
+        damagePlanet(integrityLoss);
+
+        // Display floating damage text (e.g., "-5% Integrity")
+        spawnDamageText(`-${integrityLoss}% Integrity`, core.x, canvas.height - 60, '#ef4444');
+
+        // Play warning sound
+        sounds.playWarning();
+
+        // Flash screen red
+        screenFlashAlpha = 0.65;
+
+        // Shake the camera
+        triggerScreenShake(12);
+
+        // Particle burst
+        spawnParticleBurst(core.x, canvas.height - 15, '#ef4444', 25);
+
+        alienCores.splice(i, 1);
+        continue;
       }
     }
 
@@ -2711,6 +2912,14 @@ function createGame() {
       ctx.beginPath();
       
       if (item.type === 'credit') {
+        // Disappearing credits blink
+        const age = Date.now() - item.spawnedAt;
+        if (age > 4000) {
+          if (Math.floor(age / 150) % 2 === 0) {
+            ctx.restore();
+            return;
+          }
+        }
         // Gold Coin
         ctx.arc(0, 0, item.radius, 0, Math.PI * 2);
         ctx.fillStyle = '#facc15';
@@ -2798,6 +3007,73 @@ function createGame() {
         ctx.lineWidth = 2;
         ctx.stroke();
       }
+      ctx.restore();
+    });
+
+    // 3.5. Draw Alien Cores (Spiky, glowing, pulsing red design with warning indicators)
+    alienCores.forEach(core => {
+      ctx.save();
+      ctx.translate(core.x, core.y);
+
+      // Pulse scaling factor using core.pulseTime
+      const pulseFactor = 1 + Math.sin(core.pulseTime) * 0.15;
+      const baseRadius = core.radius * pulseFactor;
+
+      // Outer warning aura ring
+      ctx.beginPath();
+      ctx.arc(0, 0, baseRadius * 1.6, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.15)';
+      ctx.fill();
+
+      // Glowing shadow effects
+      ctx.shadowColor = '#ef4444';
+      ctx.shadowBlur = 15;
+
+      // Spiky design: Draw a multi-pointed star shape
+      ctx.beginPath();
+      const spikes = 10;
+      const outerRad = baseRadius * 1.25;
+      const innerRad = baseRadius * 0.7;
+      let rot = Math.PI / 2 * 3;
+      let step = Math.PI / spikes;
+
+      ctx.moveTo(0, -outerRad);
+      for (let i = 0; i < spikes; i++) {
+        // Outer spike
+        let x1 = Math.cos(rot) * outerRad;
+        let y1 = Math.sin(rot) * outerRad;
+        ctx.lineTo(x1, y1);
+        rot += step;
+
+        // Inner trough
+        let x2 = Math.cos(rot) * innerRad;
+        let y2 = Math.sin(rot) * innerRad;
+        ctx.lineTo(x2, y2);
+        rot += step;
+      }
+      ctx.closePath();
+      ctx.fillStyle = '#ef4444'; // Bright Red Core
+      ctx.fill();
+
+      // Inner Core core glow
+      ctx.beginPath();
+      ctx.arc(0, 0, baseRadius * 0.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#fca5a5'; // Soft red/pink center
+      ctx.shadowBlur = 5;
+      ctx.fill();
+
+      // Display HP bar above the core
+      if (core.hp < core.maxHp) {
+        const barW = 24;
+        const barH = 3;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(-barW / 2, -baseRadius - 10, barW, barH);
+        
+        const healthPct = Math.max(0, core.hp / core.maxHp);
+        ctx.fillStyle = '#f87171';
+        ctx.fillRect(-barW / 2, -baseRadius - 10, barW * healthPct, barH);
+      }
+
       ctx.restore();
     });
 
@@ -3422,6 +3698,14 @@ function createGame() {
       particles.length = 0;
       damageTexts.length = 0;
       drones.length = 0;
+      alienCores.length = 0;
+
+      alienCoreWarningTimer = 0;
+      const warningEl = document.getElementById('alien-core-warning');
+      if (warningEl) {
+        warningEl.classList.remove('opacity-100', 'scale-100');
+        warningEl.classList.add('opacity-0', 'scale-95');
+      }
 
       lastMissileFired = 0;
 
