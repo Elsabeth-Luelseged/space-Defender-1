@@ -43,9 +43,9 @@
 
     <!-- MAIN MENU -->
     <div id="main-menu" class="screen bg-gradient-to-b from-[#060613]/90 to-[#030308]/95 z-40">
-      <div class="w-full max-w-lg px-6 flex flex-col items-center justify-between h-[85vh] text-center">
+      <div class="w-full max-w-lg px-6 flex flex-col items-center justify-between h-[88vh] text-center">
         <!-- Header -->
-        <div class="mt-8 flex flex-col items-center space-y-4">
+        <div class="mt-6 flex flex-col items-center space-y-3">
           <div class="flex items-center space-x-2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-[10px] font-mono tracking-widest text-cyan-400 uppercase">
             <span>● NEON FORCE ACTIVE</span>
           </div>
@@ -55,39 +55,56 @@
           </h1>
           <!-- Subtitle / Game Description -->
           <p id="game-description" class="text-xs md:text-sm text-slate-400 font-normal leading-relaxed max-w-sm">
-            Space Defender is a fast-paced cosmic action game where you pilot a starship to protect your planet and conquer endless waves of enemy ships, alien bugs, and asteroids.
+            Pilot your starship through 30 intense combat levels across 3 difficulty stages to defend Earth from alien invasion!
           </p>
         </div>
 
         <!-- Space Ship Vector preview -->
-        <div class="my-4 relative w-32 h-32 flex items-center justify-center animate-ship-drift">
-          <svg class="w-16 h-16 text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.7)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <div class="my-2 relative w-28 h-28 flex items-center justify-center animate-ship-drift">
+          <svg class="w-14 h-14 text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.7)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 22l10-4 10 4L12 2z" />
           </svg>
           <div class="absolute bottom-2 w-4 h-4 rounded-full bg-orange-500/80 animate-ping"></div>
         </div>
 
-        <!-- Controls & Buttons -->
-        <div class="w-full flex flex-col space-y-3 mb-8">
-          <!-- Start Button -->
-          <button id="btn-start-game" class="w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-lg rounded-xl transition duration-200 uppercase tracking-widest font-mono cursor-pointer shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-95 min-h-[52px]">
-            START MISSION
-          </button>
+        <!-- Controls & Main Menu Action Stack -->
+        <div class="w-full flex flex-col space-y-2.5 mb-6 font-mono">
+          <!-- Primary Actions Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full">
+            <!-- New Game -->
+            <button id="btn-new-game" class="py-3.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-sm rounded-xl transition duration-200 uppercase tracking-wider cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.3)] active:scale-95 min-h-[48px] flex items-center justify-center space-x-1.5">
+              <span>▶ NEW GAME</span>
+            </button>
+            
+            <!-- Continue -->
+            <button id="btn-continue-game" class="py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm rounded-xl transition duration-200 uppercase tracking-wider cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.3)] active:scale-95 min-h-[48px] flex items-center justify-center space-x-1.5">
+              <span>▶ CONTINUE</span>
+              <span id="continue-lvl-tag" class="text-[9px] bg-emerald-950 text-emerald-300 px-1.5 py-0.5 rounded ml-1 font-bold">LVL 1</span>
+            </button>
+          </div>
 
-          <!-- Toggle buttons row -->
-          <div class="grid grid-cols-3 gap-2 w-full">
-            <!-- Audio Button -->
-            <button id="btn-sound-toggle" class="py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-[10px] rounded-xl border border-slate-800 transition duration-200 cursor-pointer flex flex-col items-center justify-center min-h-[48px]">
+          <!-- Level Select & Hangar row -->
+          <div class="grid grid-cols-2 gap-2.5 w-full">
+            <button id="btn-level-select" class="py-3 bg-slate-900 hover:bg-slate-800 text-cyan-400 font-bold text-xs rounded-xl border border-cyan-500/30 transition duration-200 cursor-pointer flex items-center justify-center space-x-1 min-h-[44px]">
+              <span>▶ LEVEL SELECT</span>
+            </button>
+
+            <button id="btn-main-shop" class="py-3 bg-slate-900 hover:bg-slate-800 text-yellow-400 font-bold text-xs rounded-xl border border-yellow-500/30 transition duration-200 cursor-pointer flex items-center justify-center space-x-1 min-h-[44px]">
+              <span>🛠 HANGAR</span>
+            </button>
+          </div>
+
+          <!-- Secondary controls row -->
+          <div class="grid grid-cols-3 gap-2 w-full pt-1">
+            <button id="btn-sound-toggle" class="py-2.5 bg-slate-950 hover:bg-slate-900 text-slate-400 font-mono text-[9px] rounded-xl border border-slate-900 transition duration-200 cursor-pointer flex flex-col items-center justify-center min-h-[40px]">
               <span id="sound-text">SOUND: ON</span>
             </button>
 
-            <!-- Settings Button -->
-            <button id="btn-main-settings" class="py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-[10px] rounded-xl border border-slate-800 transition duration-200 cursor-pointer flex flex-col items-center justify-center min-h-[48px]">
+            <button id="btn-main-settings" class="py-2.5 bg-slate-950 hover:bg-slate-900 text-slate-400 font-mono text-[9px] rounded-xl border border-slate-900 transition duration-200 cursor-pointer flex flex-col items-center justify-center min-h-[40px]">
               <span>SETTINGS</span>
             </button>
 
-            <!-- Instructions Toggle -->
-            <button id="btn-how-to-play" class="py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-[10px] rounded-xl border border-slate-800 transition duration-200 cursor-pointer flex flex-col items-center justify-center min-h-[48px]">
+            <button id="btn-how-to-play" class="py-2.5 bg-slate-950 hover:bg-slate-900 text-slate-400 font-mono text-[9px] rounded-xl border border-slate-900 transition duration-200 cursor-pointer flex flex-col items-center justify-center min-h-[40px]">
               <span>HOW TO PLAY</span>
             </button>
           </div>
@@ -184,13 +201,16 @@
               </div>
             </div>
 
-            <!-- Wave info center -->
-            <div class="flex items-center justify-center select-none shrink-0">
+            <!-- Level info center -->
+            <div class="flex items-center justify-center select-none shrink-0 space-x-1.5">
               <div class="border border-cyan-500/30 bg-cyan-950/30 rounded-lg px-2.5 py-0.5 flex flex-col items-center justify-center min-w-[50px] leading-tight">
-                <span class="text-[7px] font-bold text-slate-400 tracking-wider">WAVE</span>
-                <span id="hud-wave" class="text-cyan-400 font-extrabold text-[11px] tracking-wider">1</span>
+                <span class="text-[7px] font-bold text-slate-400 tracking-wider">LEVEL</span>
+                <span id="hud-level" class="text-cyan-400 font-extrabold text-[11px] tracking-wider">1</span>
+                <span id="hud-wave" class="hidden">1</span>
               </div>
-              <!-- Old warning alert is now hidden/unused in HTML to avoid layout breaking, but we keep an invisible node in case script binds to it -->
+              <div id="hud-difficulty-badge" class="px-2 py-1 rounded-lg text-[8px] font-extrabold tracking-wider bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.2)]">
+                🟢 EASY
+              </div>
               <span id="hud-alert" class="hidden"></span>
             </div>
 
@@ -284,6 +304,20 @@
               WAVE 1
             </div>
             <p class="text-[9px] tracking-[0.3em] text-slate-400 font-semibold uppercase mt-2">ENGAGE ALL ENEMY FORCES</p>
+          </div>
+        </div>
+
+        <!-- Centered Animated Level Banner Overlay -->
+        <div id="level-banner-overlay" class="absolute inset-0 pointer-events-none flex items-center justify-center font-sans z-40 select-none transition-all duration-300 opacity-0 hidden">
+          <div class="text-center transform scale-95 transition-transform duration-300 bg-slate-950/90 border-2 border-cyan-500/50 rounded-2xl p-6 px-10 shadow-[0_0_35px_rgba(6,182,212,0.4)] backdrop-blur-md animate-pulse">
+            <div class="text-[10px] font-mono tracking-[0.4em] text-cyan-400/80 mb-1">====================</div>
+            <div id="level-banner-number" class="text-4xl md:text-5xl font-extrabold text-cyan-400 tracking-[0.2em] uppercase drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]">
+              LEVEL 1
+            </div>
+            <div id="level-banner-subtitle" class="text-xs font-mono tracking-[0.25em] text-yellow-400 font-bold uppercase mt-2">
+              Destroy All Hostiles
+            </div>
+            <div class="text-[10px] font-mono tracking-[0.4em] text-cyan-400/80 mt-1">====================</div>
           </div>
         </div>
 
@@ -672,11 +706,204 @@
           <button id="btn-pause-menu" class="w-full py-3 bg-slate-950 hover:bg-slate-900 text-slate-400 font-extrabold border border-slate-900 rounded-xl uppercase text-xs tracking-wider cursor-pointer active:scale-95 transition min-h-[44px]">
             MAIN MENU
           </button>
+    <!-- LEVEL SELECT MODAL -->
+    <div id="level-select-modal" class="hidden fixed inset-0 bg-[#04040c]/96 backdrop-blur-md z-50 flex items-center justify-center p-4">
+      <div class="bg-[#090919] border-2 border-cyan-500/30 rounded-2xl p-5 w-full max-w-2xl h-[90vh] flex flex-col justify-between shadow-[0_0_35px_rgba(6,182,212,0.2)] font-mono">
+        <!-- Header -->
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+          <div>
+            <h2 class="text-xl font-extrabold text-white uppercase tracking-wider flex items-center space-x-2">
+              <span class="text-cyan-400">MISSION LEVEL SELECT</span>
+            </h2>
+            <p class="text-[10px] text-slate-400 mt-0.5">Select an unlocked sector to deploy into combat</p>
+          </div>
+          <button id="btn-close-level-select" class="text-slate-400 hover:text-white text-2xl font-bold cursor-pointer transition">&times;</button>
+        </div>
+
+        <!-- Scrollable Levels Grid divided by Difficulty Stages -->
+        <div class="flex-1 my-3 overflow-y-auto pr-1 space-y-5 upgrades-scroll">
+          
+          <!-- 🟢 EASY STAGE (Levels 1-10) -->
+          <div class="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-3.5">
+            <div class="flex justify-between items-center mb-3 border-b border-emerald-500/20 pb-2">
+              <div class="flex items-center space-x-2">
+                <span class="text-emerald-400 text-base font-extrabold">🟢 EASY STAGE</span>
+                <span class="text-[9px] bg-emerald-950 border border-emerald-500/40 text-emerald-300 px-2 py-0.5 rounded-full font-bold">LEVELS 1–10</span>
+              </div>
+              <span class="text-[9px] text-emerald-400/80 font-semibold">TUTORIAL & BASE DEFENSE</span>
+            </div>
+            <div id="grid-stage-easy" class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+
+          <!-- 🟡 HARD STAGE (Levels 11-20) -->
+          <div class="bg-yellow-950/20 border border-yellow-500/30 rounded-xl p-3.5">
+            <div class="flex justify-between items-center mb-3 border-b border-yellow-500/20 pb-2">
+              <div class="flex items-center space-x-2">
+                <span class="text-yellow-400 text-base font-extrabold">🟡 HARD STAGE</span>
+                <span class="text-[9px] bg-yellow-950 border border-yellow-500/40 text-yellow-300 px-2 py-0.5 rounded-full font-bold">LEVELS 11–20</span>
+              </div>
+              <span id="hard-stage-lock-msg" class="text-[9px] text-slate-400 font-semibold">REQUIRES LEVEL 10 CLEAR</span>
+            </div>
+            <div id="grid-stage-hard" class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+
+          <!-- 🔴 EXPERT STAGE (Levels 21-30) -->
+          <div class="bg-rose-950/20 border border-rose-500/30 rounded-xl p-3.5">
+            <div class="flex justify-between items-center mb-3 border-b border-rose-500/20 pb-2">
+              <div class="flex items-center space-x-2">
+                <span class="text-rose-400 text-base font-extrabold">🔴 EXPERT STAGE</span>
+                <span class="text-[9px] bg-rose-950 border border-rose-500/40 text-rose-300 px-2 py-0.5 rounded-full font-bold">LEVELS 21–30</span>
+              </div>
+              <span id="expert-stage-lock-msg" class="text-[9px] text-slate-400 font-semibold">REQUIRES LEVEL 20 CLEAR</span>
+            </div>
+            <div id="grid-stage-expert" class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t border-slate-800 pt-3 flex justify-between items-center">
+          <div class="flex space-x-3 text-[10px] text-slate-400">
+            <span>✅ Completed</span>
+            <span>👑 Boss Level</span>
+            <span>🔒 Locked</span>
+          </div>
+          <button id="btn-back-level-select" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl uppercase transition cursor-pointer">
+            CLOSE
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- SETTINGS MODAL -->
+    <!-- LEVEL COMPLETE MODAL -->
+    <div id="level-complete-modal" class="hidden fixed inset-0 bg-[#03030a]/92 backdrop-blur-md z-50 flex items-center justify-center p-4 font-mono">
+      <div class="bg-[#090918] border-2 border-cyan-500/40 rounded-2xl p-6 w-full max-w-md text-center flex flex-col space-y-4 shadow-[0_0_40px_rgba(6,182,212,0.25)] animate-fade-in">
+        
+        <!-- Header badge -->
+        <div class="flex flex-col items-center space-y-1">
+          <div class="px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-[10px] font-bold text-cyan-400 uppercase tracking-widest">
+            VICTORY ACHIEVED
+          </div>
+          <h2 class="text-3xl font-extrabold text-white tracking-wider uppercase drop-shadow-[0_0_12px_rgba(6,182,212,0.8)]">
+            LEVEL COMPLETE
+          </h2>
+          <p id="lc-level-title" class="text-xs text-slate-400 font-bold uppercase tracking-widest">LEVEL 1 CONQUERED</p>
+        </div>
+
+        <!-- Performance Rating Badge -->
+        <div class="flex justify-center items-center py-1">
+          <div id="lc-rank-badge" class="px-6 py-2 rounded-xl bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border-2 border-yellow-400 text-yellow-300 flex items-center space-x-2 shadow-[0_0_15px_rgba(234,179,8,0.3)]">
+            <span class="text-xs text-slate-300 font-bold">RATING:</span>
+            <span id="lc-rank-text" class="text-2xl font-extrabold tracking-widest text-yellow-400">RANK S</span>
+          </div>
+        </div>
+
+        <!-- Stats Breakdown Grid -->
+        <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3.5 text-xs space-y-2 text-left">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">LEVEL SCORE:</span>
+            <span id="lc-score" class="text-white font-bold text-sm">+0</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">ACCURACY:</span>
+            <span id="lc-accuracy" class="text-cyan-400 font-bold">100%</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">ENEMIES DESTROYED:</span>
+            <span id="lc-enemies" class="text-pink-400 font-bold">0</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">CREDITS EARNED:</span>
+            <span id="lc-credits" class="text-yellow-400 font-bold">+0 CR</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">MISSION TIME:</span>
+            <span id="lc-time" class="text-purple-400 font-bold">0s</span>
+          </div>
+        </div>
+
+        <!-- Bonus Reward Message Banner -->
+        <div id="lc-bonus-banner" class="hidden bg-purple-950/40 border border-purple-500/40 p-2.5 rounded-xl text-xs text-purple-300 font-bold animate-pulse">
+          🎁 MILESTONE BONUS: +500 Credits & Extra Life!
+        </div>
+
+        <!-- Controls -->
+        <div class="flex flex-col space-y-2.5 pt-1">
+          <button id="btn-complete-continue" class="w-full py-3.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-sm rounded-xl uppercase tracking-wider cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.3)] active:scale-95 transition min-h-[48px]">
+            CONTINUE TO NEXT LEVEL ▶
+          </button>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="btn-complete-shop" class="py-2.5 bg-slate-900 hover:bg-slate-800 text-yellow-400 font-bold text-xs rounded-xl border border-yellow-500/30 uppercase cursor-pointer min-h-[42px]">
+              🛠 UPGRADE SHOP
+            </button>
+            <button id="btn-complete-menu" class="py-2.5 bg-slate-950 hover:bg-slate-900 text-slate-400 font-bold text-xs rounded-xl border border-slate-900 uppercase cursor-pointer min-h-[42px]">
+              MAIN MENU
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VICTORY MODAL (LEVEL 30 FINAL BOSS DEFEATED) -->
+    <div id="victory-modal" class="hidden fixed inset-0 bg-[#03030b]/96 backdrop-blur-md z-50 flex items-center justify-center p-4 font-mono">
+      <div class="bg-[#0a081c] border-2 border-yellow-400/60 rounded-2xl p-6 w-full max-w-lg text-center flex flex-col space-y-5 shadow-[0_0_50px_rgba(234,179,8,0.35)] animate-fade-in">
+        
+        <!-- Animated Trophy / Crown vector -->
+        <div class="relative w-16 h-16 mx-auto flex items-center justify-center animate-bounce duration-[3000ms]">
+          <div class="absolute inset-0 rounded-full border-2 border-yellow-400 animate-ping blur-sm"></div>
+          <svg class="w-10 h-10 text-yellow-400 drop-shadow-[0_0_15px_rgba(234,179,8,0.9)]" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
+          </svg>
+        </div>
+
+        <div class="space-y-1">
+          <h1 class="text-3xl md:text-4xl font-extrabold text-yellow-400 tracking-wider uppercase drop-shadow-[0_0_20px_rgba(234,179,8,0.8)]">
+            MISSION COMPLETE
+          </h1>
+          <h3 class="text-base md:text-lg font-bold text-white tracking-widest uppercase">
+            Earth Has Been Saved
+          </h3>
+          <p class="text-xs text-cyan-400 font-bold tracking-widest uppercase pt-0.5">
+            Congratulations Commander!
+          </p>
+        </div>
+
+        <div class="bg-slate-950/80 border border-yellow-500/30 p-3.5 rounded-xl text-xs space-y-2 text-left">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">TOTAL CAMPAIGN SCORE:</span>
+            <span id="vic-score" class="text-yellow-400 font-bold text-sm">0</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">TOTAL HOSTILES DEFEATED:</span>
+            <span id="vic-enemies" class="text-rose-400 font-bold">0</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">TOTAL CREDITS EARNED:</span>
+            <span id="vic-credits" class="text-emerald-400 font-bold">0 CR</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col space-y-2.5 pt-1">
+          <button id="btn-victory-replay-expert" class="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs rounded-xl uppercase tracking-wider cursor-pointer shadow-[0_0_15px_rgba(244,63,94,0.4)] transition min-h-[44px]">
+            🔴 REPLAY EXPERT STAGE
+          </button>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="btn-victory-new-game" class="py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs rounded-xl uppercase cursor-pointer min-h-[42px]">
+              ▶ START NEW GAME
+            </button>
+            <button id="btn-victory-menu" class="py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs rounded-xl border border-slate-800 uppercase cursor-pointer min-h-[42px]">
+              MAIN MENU
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
     <div id="settings-modal" class="fixed inset-0 bg-[#020205]/92 backdrop-blur-sm z-[60] hidden flex flex-col justify-center items-center">
       <div class="w-full max-w-sm p-6 bg-[#090915] border border-purple-500/30 rounded-2xl flex flex-col space-y-4 shadow-[0_0_20px_rgba(168,85,247,0.15)]">
         <div class="flex justify-between items-center border-b border-slate-900 pb-3">

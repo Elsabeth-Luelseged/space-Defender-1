@@ -363,6 +363,11 @@ let playerStats = {
   credits: 0,
   gems: 0,
   highScore: 0,
+
+  // LEVEL PROGRESSION (STAGES: 1-10 EASY, 11-20 HARD, 21-30 EXPERT)
+  highestUnlockedLevel: 1,
+  currentLevel: 1,
+  completedLevels: [],
   
   hullLvl: 1,      // Max lvl 5
   shieldLvl: 1,    // Max lvl 5
@@ -421,14 +426,131 @@ function loadProgress() {
     try {
       const parsed = JSON.parse(data);
       playerStats = { ...playerStats, ...parsed };
+      if (!playerStats.highestUnlockedLevel || playerStats.highestUnlockedLevel < 1) {
+        playerStats.highestUnlockedLevel = 1;
+      }
+      if (!playerStats.currentLevel || playerStats.currentLevel < 1) {
+        playerStats.currentLevel = 1;
+      }
+      if (!Array.isArray(playerStats.completedLevels)) {
+        playerStats.completedLevels = [];
+      }
     } catch (e) {
       console.error("Failed to parse loaded progress", e);
     }
   }
+  updateMainUI();
 }
 
 function saveProgress() {
   localStorage.setItem('space_defender_rpg_stats', JSON.stringify(playerStats));
+  updateMainUI();
+}
+
+function updateMainUI() {
+  const highest = playerStats.highestUnlockedLevel || 1;
+  const tagEl = document.getElementById('continue-lvl-tag');
+  if (tagEl) {
+    tagEl.innerText = `LVL ${highest}`;
+  }
+
+  const btnContinue = document.getElementById('btn-continue-game');
+  if (btnContinue) {
+    if (highest > 1) {
+      btnContinue.classList.remove('opacity-60');
+      btnContinue.disabled = false;
+    } else {
+      btnContinue.classList.add('opacity-60');
+    }
+  }
+}
+
+// Render 30 Levels Grid for Easy (1-10), Hard (11-20), Expert (21-30)
+function renderLevelSelectGrid() {
+  const easyGrid = document.getElementById('grid-stage-easy');
+  const hardGrid = document.getElementById('grid-stage-hard');
+  const expertGrid = document.getElementById('grid-stage-expert');
+
+  if (!easyGrid || !hardGrid || !expertGrid) return;
+
+  easyGrid.innerHTML = '';
+  hardGrid.innerHTML = '';
+  expertGrid.innerHTML = '';
+
+  const highest = playerStats.highestUnlockedLevel || 1;
+  const completed = playerStats.completedLevels || [];
+
+  // Stage Lock Banners
+  const hardLockMsg = document.getElementById('hard-stage-lock-msg');
+  if (hardLockMsg) {
+    if (highest >= 11) {
+      hardLockMsg.innerText = "UNLOCKED";
+      hardLockMsg.className = "text-[9px] text-emerald-400 font-bold";
+    } else {
+      hardLockMsg.innerText = "REQUIRES LEVEL 10 CLEAR";
+      hardLockMsg.className = "text-[9px] text-slate-400 font-semibold";
+    }
+  }
+
+  const expertLockMsg = document.getElementById('expert-stage-lock-msg');
+  if (expertLockMsg) {
+    if (highest >= 21) {
+      expertLockMsg.innerText = "UNLOCKED";
+      expertLockMsg.className = "text-[9px] text-emerald-400 font-bold";
+    } else {
+      expertLockMsg.innerText = "REQUIRES LEVEL 20 CLEAR";
+      expertLockMsg.className = "text-[9px] text-slate-400 font-semibold";
+    }
+  }
+
+  for (let i = 1; i <= 30; i++) {
+    const isUnlocked = i <= highest;
+    const isDone = completed.includes(i);
+    const isBoss = (i === 10 || i === 20 || i === 30);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+
+    let badgeIcon = isDone ? '✅' : (isBoss ? '👑' : (isUnlocked ? '▶' : '🔒'));
+    let subtext = isDone ? 'CLEARED' : (isBoss ? 'BOSS' : (isUnlocked ? 'READY' : 'LOCKED'));
+
+    if (isUnlocked) {
+      btn.className = "p-2.5 rounded-xl border font-mono transition transform active:scale-95 cursor-pointer flex flex-col items-center justify-center space-y-0.5 " +
+        (isBoss ? "bg-amber-950/30 border-amber-500/50 text-amber-300 hover:bg-amber-900/50 shadow-[0_0_10px_rgba(245,158,11,0.2)]" : "bg-slate-900 border-cyan-500/30 text-cyan-300 hover:bg-cyan-950/50 hover:border-cyan-400");
+    } else {
+      btn.className = "p-2.5 rounded-xl border border-slate-900 bg-slate-950/50 text-slate-600 font-mono cursor-not-allowed opacity-50 flex flex-col items-center justify-center space-y-0.5";
+    }
+
+    btn.innerHTML = `
+      <span class="text-xs font-extrabold flex items-center space-x-1">
+        <span>LVL ${i}</span>
+        <span>${badgeIcon}</span>
+      </span>
+      <span class="text-[8px] tracking-wider uppercase font-bold opacity-80">${subtext}</span>
+    `;
+
+    if (isUnlocked) {
+      btn.addEventListener('click', () => {
+        playerStats.currentLevel = i;
+        saveProgress();
+        
+        const modalSelect = document.getElementById('level-select-modal');
+        if (modalSelect) modalSelect.classList.add('hidden');
+        
+        sounds.init();
+        showScreen('gameplay-container');
+        if (currentGameInstance) {
+          currentGameInstance.destroy();
+        }
+        currentGameInstance = createGame(i);
+        currentGameInstance.start();
+      });
+    }
+
+    if (i <= 10) easyGrid.appendChild(btn);
+    else if (i <= 20) hardGrid.appendChild(btn);
+    else expertGrid.appendChild(btn);
+  }
 }
 
 // ==========================================
@@ -718,16 +840,145 @@ function initMenuSystem() {
     sounds.playPowerUp();
   });
 
-  // Launch Game
-  btnStart.addEventListener('click', () => {
-    sounds.init();
-    showScreen('gameplay-container');
-    if (currentGameInstance) {
-      currentGameInstance.destroy();
-    }
-    currentGameInstance = createGame();
-    currentGameInstance.start();
-  });
+  // Launch Game / New Game
+  if (btnStart) {
+    btnStart.addEventListener('click', () => {
+      sounds.init();
+      playerStats.currentLevel = 1;
+      showScreen('gameplay-container');
+      if (currentGameInstance) {
+        currentGameInstance.destroy();
+      }
+      currentGameInstance = createGame(1);
+      currentGameInstance.start();
+    });
+  }
+
+  // New Game Button
+  const btnNewGame = document.getElementById('btn-new-game');
+  if (btnNewGame) {
+    btnNewGame.addEventListener('click', () => {
+      sounds.init();
+      playerStats.currentLevel = 1;
+      showScreen('gameplay-container');
+      if (currentGameInstance) {
+        currentGameInstance.destroy();
+      }
+      currentGameInstance = createGame(1);
+      currentGameInstance.start();
+    });
+  }
+
+  // Continue Game Button
+  const btnContinue = document.getElementById('btn-continue-game');
+  if (btnContinue) {
+    btnContinue.addEventListener('click', () => {
+      sounds.init();
+      const startLvl = playerStats.highestUnlockedLevel || 1;
+      playerStats.currentLevel = startLvl;
+      showScreen('gameplay-container');
+      if (currentGameInstance) {
+        currentGameInstance.destroy();
+      }
+      currentGameInstance = createGame(startLvl);
+      currentGameInstance.start();
+    });
+  }
+
+  // Level Select Modal Triggers
+  const btnLevelSelect = document.getElementById('btn-level-select');
+  const modalLevelSelect = document.getElementById('level-select-modal');
+  const btnCloseLevelSelect = document.getElementById('btn-close-level-select');
+  const btnBackLevelSelect = document.getElementById('btn-back-level-select');
+
+  if (btnLevelSelect && modalLevelSelect) {
+    btnLevelSelect.addEventListener('click', () => {
+      renderLevelSelectGrid();
+      modalLevelSelect.classList.remove('hidden');
+    });
+  }
+  if (btnCloseLevelSelect && modalLevelSelect) {
+    btnCloseLevelSelect.addEventListener('click', () => {
+      modalLevelSelect.classList.add('hidden');
+    });
+  }
+  if (btnBackLevelSelect && modalLevelSelect) {
+    btnBackLevelSelect.addEventListener('click', () => {
+      modalLevelSelect.classList.add('hidden');
+    });
+  }
+
+  // Main Menu Hangar / Upgrades Shop Button
+  const btnMainShop = document.getElementById('btn-main-shop');
+  if (btnMainShop) {
+    btnMainShop.addEventListener('click', () => {
+      openUpgradesOverlay();
+    });
+  }
+
+  // Level Complete Modal buttons
+  const btnCompleteContinue = document.getElementById('btn-complete-continue');
+  if (btnCompleteContinue) {
+    btnCompleteContinue.addEventListener('click', () => {
+      document.getElementById('level-complete-modal').classList.add('hidden');
+      showScreen('gameplay-container');
+      const nextLvl = (playerStats.currentLevel || 1) + 1;
+      playerStats.currentLevel = nextLvl;
+      if (currentGameInstance) {
+        currentGameInstance.startNextLevel(nextLvl);
+      } else {
+        currentGameInstance = createGame(nextLvl);
+        currentGameInstance.start();
+      }
+    });
+  }
+
+  const btnCompleteShop = document.getElementById('btn-complete-shop');
+  if (btnCompleteShop) {
+    btnCompleteShop.addEventListener('click', () => {
+      document.getElementById('level-complete-modal').classList.add('hidden');
+      openUpgradesOverlay();
+    });
+  }
+
+  const btnCompleteMenu = document.getElementById('btn-complete-menu');
+  if (btnCompleteMenu) {
+    btnCompleteMenu.addEventListener('click', () => {
+      document.getElementById('level-complete-modal').classList.add('hidden');
+      showScreen('main-menu');
+    });
+  }
+
+  // Victory Modal buttons
+  const btnVictoryReplay = document.getElementById('btn-victory-replay-expert');
+  if (btnVictoryReplay) {
+    btnVictoryReplay.addEventListener('click', () => {
+      document.getElementById('victory-modal').classList.add('hidden');
+      showScreen('gameplay-container');
+      if (currentGameInstance) currentGameInstance.destroy();
+      currentGameInstance = createGame(21);
+      currentGameInstance.start();
+    });
+  }
+
+  const btnVictoryNewGame = document.getElementById('btn-victory-new-game');
+  if (btnVictoryNewGame) {
+    btnVictoryNewGame.addEventListener('click', () => {
+      document.getElementById('victory-modal').classList.add('hidden');
+      showScreen('gameplay-container');
+      if (currentGameInstance) currentGameInstance.destroy();
+      currentGameInstance = createGame(1);
+      currentGameInstance.start();
+    });
+  }
+
+  const btnVictoryMenu = document.getElementById('btn-victory-menu');
+  if (btnVictoryMenu) {
+    btnVictoryMenu.addEventListener('click', () => {
+      document.getElementById('victory-modal').classList.add('hidden');
+      showScreen('main-menu');
+    });
+  }
 
   // Sound Control toggle
   btnSound.addEventListener('click', () => {
@@ -1222,7 +1473,7 @@ function selectShip(shipType) {
 // ==========================================
 // 🧩 CORE GAME ENGINE (createGame)
 // ==========================================
-function createGame() {
+function createGame(startLevelNumber = 1) {
   const canvas = document.getElementById('game-canvas');
   const ctx = canvas.getContext('2d');
 
@@ -1245,9 +1496,16 @@ function createGame() {
   let isRunning = false;
   let isPaused = false;
   let score = 0;
-  let wave = 1;
+  let currentLevel = startLevelNumber || playerStats.currentLevel || 1;
+  let wave = currentLevel;
   let enemiesDefeatedCount = 0;
   let creditsEarnedInRun = 0;
+
+  // Level Statistics Tracking
+  let shotsFiredInLevel = 0;
+  let shotsHitInLevel = 0;
+  let enemiesDefeatedInLevel = 0;
+  let levelStartTime = Date.now();
   
   // Game Loop request ID
   let animationFrameId = null;
@@ -1622,33 +1880,89 @@ function createGame() {
   }
 
   // ==========================================
-  // 🛡️ WAVE MANAGER LOGIC
+  // 🛡️ LEVEL & STAGE MANAGER LOGIC
   // ==========================================
-  function advanceWave() {
-    waveState = 'countdown';
-    waveTimer = wave === 1 ? 30 : 90; // Snappy 0.5s countdown on game start (Wave 1), 1.5s on later waves!
-    
-    // Waves parameters scaling
-    if (wave === 1) {
-      currentEnemiesCountToSpawn = 8;
-    } else if (wave <= 3) {
-      currentEnemiesCountToSpawn = 10 + (wave - 2) * 2;
-    } else if (wave <= 6) {
-      currentEnemiesCountToSpawn = 15 + (wave - 4) * 3;
+  function showLevelBanner(lvl) {
+    const banner = document.getElementById('level-banner-overlay');
+    const bannerNum = document.getElementById('level-banner-number');
+    const bannerSub = document.getElementById('level-banner-subtitle');
+
+    if (!banner || !bannerNum || !bannerSub) return;
+
+    bannerNum.innerText = `LEVEL ${lvl}`;
+
+    if (lvl === 10) {
+      bannerSub.innerText = "ELIMINATE EASY STAGE BOSS";
+    } else if (lvl === 20) {
+      bannerSub.innerText = "ELIMINATE HARD STAGE BOSS";
+    } else if (lvl === 30) {
+      bannerSub.innerText = "ELIMINATE FINAL COSMIC BOSS";
+    } else if (lvl === 1 || lvl === 11 || lvl === 21) {
+      bannerSub.innerText = "ENGAGE ALL ENEMY FORCES";
     } else {
-      currentEnemiesCountToSpawn = 24 + (wave - 7) * 4;
-    }
-    
-    spawnedCountThisWave = 0;
-    
-    // Highlight alert warning message
-    const alertLabel = document.getElementById('hud-alert');
-    if (alertLabel) {
-      alertLabel.innerText = `ALERT: WAVE ${wave} INCOMING`;
-      alertLabel.style.opacity = '1';
+      bannerSub.innerText = "Destroy All Hostiles";
     }
 
+    banner.classList.remove('hidden');
+    banner.classList.remove('opacity-0');
+    banner.classList.add('opacity-100');
+
+    setTimeout(() => {
+      banner.classList.add('opacity-0');
+      banner.classList.remove('opacity-100');
+      setTimeout(() => {
+        banner.classList.add('hidden');
+      }, 300);
+    }, 2200);
+  }
+
+  function updateDifficultyBadge(lvl) {
+    const badgeEl = document.getElementById('hud-difficulty-badge');
+    if (!badgeEl) return;
+
+    if (lvl <= 10) {
+      badgeEl.innerText = "🟢 EASY";
+      badgeEl.className = "px-2 py-1 rounded-lg text-[8px] font-extrabold tracking-wider bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.2)]";
+    } else if (lvl <= 20) {
+      badgeEl.innerText = "🟡 HARD";
+      badgeEl.className = "px-2 py-1 rounded-lg text-[8px] font-extrabold tracking-wider bg-yellow-950/80 border border-yellow-500/40 text-yellow-400 shadow-[0_0_6px_rgba(234,179,8,0.2)]";
+    } else {
+      badgeEl.innerText = "🔴 EXPERT";
+      badgeEl.className = "px-2 py-1 rounded-lg text-[8px] font-extrabold tracking-wider bg-rose-950/80 border border-rose-500/40 text-rose-400 shadow-[0_0_6px_rgba(244,63,94,0.2)]";
+    }
+  }
+
+  function startLevel(lvl) {
+    currentLevel = lvl;
+    wave = lvl;
+    waveState = 'countdown';
+    waveTimer = lvl === 1 ? 25 : 60;
+
+    shotsFiredInLevel = 0;
+    shotsHitInLevel = 0;
+    enemiesDefeatedInLevel = 0;
+    levelStartTime = Date.now();
+
+    if (lvl <= 10) {
+      currentEnemiesCountToSpawn = 6 + (lvl - 1) * 2;
+    } else if (lvl <= 20) {
+      currentEnemiesCountToSpawn = 16 + (lvl - 11) * 2;
+    } else {
+      currentEnemiesCountToSpawn = 26 + (lvl - 21) * 2;
+    }
+
+    spawnedCountThisWave = 0;
+
+    const hudLvl = document.getElementById('hud-level');
+    if (hudLvl) hudLvl.innerText = currentLevel;
+
+    updateDifficultyBadge(currentLevel);
+    showLevelBanner(currentLevel);
     sounds.playWaveComplete();
+  }
+
+  function advanceWave() {
+    startLevel(currentLevel);
   }
 
   // ==========================================
@@ -1658,160 +1972,160 @@ function createGame() {
     const margin = 30;
     const roll = Math.random();
     
-    // Choose enemy category based on wave progression ratios
     let type = 'asteroid';
     let size = 20;
     let hp = 1;
     let speed = 2.0;
     let points = 10;
 
-    // Difficulty scaling factor calculation
     let hpMult = 1.0;
     let speedMult = 1.0;
-    const diff = playerStats.difficulty || 'normal';
-    if (diff === 'easy') {
-      hpMult = 0.7;
-      speedMult = 0.8;
-    } else if (diff === 'hard') {
-      hpMult = 1.35;
+    if (currentLevel <= 10) {
+      hpMult = 0.65;
+      speedMult = 0.75;
+    } else if (currentLevel <= 20) {
+      hpMult = 1.2;
       speedMult = 1.25;
+    } else {
+      hpMult = 1.8;
+      speedMult = 1.6;
     }
 
-    // Check if spawning Boss on waves multiple of 5
-    const isBossWave = (wave % 5 === 0);
+    const isBossLevel = (currentLevel === 10 || currentLevel === 20 || currentLevel === 30);
     const bossesCount = enemies.filter(e => e.isBoss).length;
     
-    if (isBossWave && spawnedCountThisWave === 0 && bossesCount === 0) {
-      // Spawn massive boss!
-      const bossHp = Math.max(15, Math.round((30 + wave * 25) * hpMult));
+    if (isBossLevel && spawnedCountThisWave === 0 && bossesCount === 0) {
+      const baseHp = currentLevel === 10 ? 120 : (currentLevel === 20 ? 300 : 600);
+      const bossHp = Math.round(baseHp * hpMult);
       enemies.push({
         x: canvas.width / 2,
         y: -120,
-        vx: 1.5,
+        vx: currentLevel >= 21 ? 2.5 : 1.5,
         vy: 1.0 * speedMult,
         width: 110,
         height: 60,
         hp: bossHp,
         maxHp: bossHp,
-        points: 500,
+        points: currentLevel === 30 ? 2500 : (currentLevel === 20 ? 1200 : 500),
         isBoss: true,
         lastShot: 0,
         lastMissile: 0,
-        color: '#ff0055',
-        shootInterval: (1200 - Math.min(600, wave * 40)) / speedMult
+        color: currentLevel === 30 ? '#dc2626' : (currentLevel === 20 ? '#f59e0b' : '#ff0055'),
+        shootInterval: (1100 - Math.min(600, currentLevel * 25)) / speedMult
       });
-      sounds.startMusic('boss'); // Transition to boss battle sequence theme!
-      spawnedCountThisWave = currentEnemiesCountToSpawn; // End normal spawns until boss cleared
+      sounds.startMusic('boss');
+      spawnedCountThisWave = currentEnemiesCountToSpawn;
       return;
     }
 
-    // Normal unit choices based on wave milestone scaling
-    if (wave === 1) {
-      // Wave 1: Snappy enemies. Only swarmers (1-hit fast interceptor) and asteroids (medium)
+    if (currentLevel <= 3) {
       if (roll > 0.6) {
         type = 'swarmer';
         size = 11;
         hp = 1;
-        speed = Math.random() * 0.8 + 3.0; // Fast and snappy!
+        speed = (Math.random() * 0.5 + 2.0) * speedMult;
         points = 15;
       } else {
         type = 'asteroid';
-        size = Math.random() * 15 + 12;
+        size = Math.random() * 12 + 12;
         hp = 1;
-        speed = Math.random() * 0.6 + 1.8; // Moving at a active pace
+        speed = (Math.random() * 0.5 + 1.4) * speedMult;
         points = 10;
       }
-    } else if (wave >= 2 && wave <= 3) {
-      // Wave 2 - 3: Faster speed, more enemies. Swarmers, asteroids, scouts, and bugs.
-      if (roll > 0.75) {
-        type = 'bug'; // Zig-zag kamikaze
-        size = 14;
-        hp = 2;
-        speed = Math.random() * 1.0 + 3.2;
-        points = 30;
-      } else if (roll > 0.45) {
-        type = 'scout'; // Shoots back
-        size = 18;
-        hp = 2;
-        speed = Math.random() * 0.8 + 2.4;
-        points = 25;
-      } else if (roll > 0.2) {
-        type = 'swarmer';
-        size = 11;
-        hp = 1;
-        speed = Math.random() * 1.0 + 3.6;
-        points = 15;
-      } else {
-        type = 'asteroid';
-        size = Math.random() * 18 + 12;
-        hp = Math.ceil(size / 10);
-        speed = Math.random() * 1.0 + 2.0;
-        points = Math.floor(size);
-      }
-    } else if (wave >= 4 && wave <= 6) {
-      // Wave 4 - 6: Faster enemies, more bullets.
-      if (roll > 0.8) {
-        type = 'scout';
-        size = 18;
-        hp = 2 + Math.floor(wave / 5);
-        speed = Math.random() * 0.8 + 2.4; // Faster
-        points = 25;
-      } else if (roll > 0.55) {
+    } else if (currentLevel <= 10) {
+      if (roll > 0.80) {
         type = 'bug';
         size = 14;
-        hp = 2 + Math.floor(wave / 6);
-        speed = Math.random() * 1.0 + 3.0; // Faster
-        points = 35;
+        hp = 1;
+        speed = (Math.random() * 0.8 + 2.2) * speedMult;
+        points = 30;
+      } else if (roll > 0.55) {
+        type = 'scout';
+        size = 18;
+        hp = 2;
+        speed = (Math.random() * 0.6 + 1.8) * speedMult;
+        points = 25;
       } else if (roll > 0.25) {
         type = 'swarmer';
         size = 11;
         hp = 1;
-        speed = Math.random() * 1.0 + 3.8; // Fast
+        speed = (Math.random() * 0.8 + 2.5) * speedMult;
         points = 15;
       } else {
         type = 'asteroid';
-        size = Math.random() * 20 + 12;
-        hp = Math.ceil(size / 8) + Math.floor(wave / 3);
-        speed = Math.random() * 1.0 + 1.8;
+        size = Math.random() * 16 + 12;
+        hp = Math.ceil(size / 10);
+        speed = (Math.random() * 0.8 + 1.6) * speedMult;
         points = Math.floor(size);
       }
-    } else {
-      // Wave 7+: Very fast enemies, strong enemies (Elite) appear!
-      if (roll > 0.78) {
-        type = 'elite'; // Strong heavy units with twin heavy blasters
+    } else if (currentLevel <= 20) {
+      if (roll > 0.80) {
+        type = 'elite';
         size = 22;
-        hp = 3 + Math.floor(wave / 4); // Takes 3+ hits
-        speed = Math.random() * 0.4 + 1.4 + (wave * 0.02);
+        hp = Math.round((3 + Math.floor((currentLevel - 10) / 3)) * hpMult);
+        speed = (Math.random() * 0.5 + 1.6) * speedMult;
         points = 45;
       } else if (roll > 0.55) {
         type = 'bug';
         size = 14;
-        hp = 2 + Math.floor(wave / 5);
-        speed = Math.random() * 1.2 + 3.5 + (wave * 0.03); // Very fast
+        hp = Math.round(2 * hpMult);
+        speed = (Math.random() * 1.0 + 3.0) * speedMult;
         points = 35;
-      } else if (roll > 0.32) {
+      } else if (roll > 0.30) {
         type = 'scout';
         size = 18;
-        hp = 3 + Math.floor(wave / 4);
-        speed = Math.random() * 1.0 + 2.8 + (wave * 0.03); // Very fast
+        hp = Math.round(2 * hpMult);
+        speed = (Math.random() * 0.8 + 2.4) * speedMult;
         points = 25;
       } else if (roll > 0.12) {
         type = 'swarmer';
         size = 11;
         hp = 1;
-        speed = Math.random() * 1.2 + 4.5 + (wave * 0.04); // Extremely fast
+        speed = (Math.random() * 1.0 + 3.8) * speedMult;
         points = 15;
       } else {
         type = 'asteroid';
+        size = Math.random() * 20 + 12;
+        hp = Math.ceil(size / 8);
+        speed = (Math.random() * 1.0 + 2.0) * speedMult;
+        points = Math.floor(size);
+      }
+    } else {
+      if (roll > 0.65) {
+        type = 'elite';
+        size = 22;
+        hp = Math.round((4 + Math.floor((currentLevel - 20) / 2)) * hpMult);
+        speed = (Math.random() * 0.6 + 2.0) * speedMult;
+        points = 60;
+      } else if (roll > 0.45) {
+        type = 'bug';
+        size = 14;
+        hp = Math.round(3 * hpMult);
+        speed = (Math.random() * 1.2 + 3.8) * speedMult;
+        points = 40;
+      } else if (roll > 0.25) {
+        type = 'scout';
+        size = 18;
+        hp = Math.round(3 * hpMult);
+        speed = (Math.random() * 1.0 + 3.2) * speedMult;
+        points = 30;
+      } else if (roll > 0.10) {
+        type = 'swarmer';
+        size = 11;
+        hp = 1;
+        speed = (Math.random() * 1.4 + 4.8) * speedMult;
+        points = 20;
+      } else {
+        type = 'asteroid';
         size = Math.random() * 22 + 12;
-        hp = Math.ceil(size / 7) + Math.floor(wave / 3);
-        speed = Math.random() * 1.2 + 2.4 + (wave * 0.02);
+        hp = Math.ceil(size / 6);
+        speed = (Math.random() * 1.2 + 2.6) * speedMult;
         points = Math.floor(size);
       }
     }
 
-    const scaledHp = Math.max(1, Math.round(hp * hpMult));
-    const scaledSpeed = speed * speedMult;
+    const scaledHp = Math.max(1, hp);
+    const scaledSpeed = speed;
 
     enemies.push({
       x: Math.random() * (canvas.width - margin * 2) + margin,
@@ -1834,6 +2148,7 @@ function createGame() {
 
   // Fire weapons from standard Scout units, Elite units, or Boss
   function enemyAttack(enemy, now) {
+    if (currentLevel <= 3) return; // No enemy shooting during early levels (1-3)
     if (enemy.type === 'scout') {
       const interval = 2200 - Math.min(1000, wave * 50);
       if (now - enemy.lastShot >= interval) {
@@ -1994,6 +2309,7 @@ function createGame() {
       const missileCD = 4500 - (playerStats.missileLvl - 1) * 700; // Level 1: 4.5s, Level 5: 1.7s
       if (now - lastMissileFired >= missileCD) {
         lastMissileFired = now;
+        shotsFiredInLevel++;
 
         // Find initial nearest target
         let target = null;
@@ -2030,6 +2346,7 @@ function createGame() {
 
     if (now - player.lastFired >= currentFireInterval) {
       player.lastFired = now;
+      shotsFiredInLevel++;
       sounds.playLaser();
 
       let laserClassLvl = playerStats.laserClass;
@@ -2278,29 +2595,10 @@ function createGame() {
         spawnEnemy();
       }
 
-      // Check if wave is completely conquered
+      // Check if wave/level is completely conquered
       if (spawnedCountThisWave >= currentEnemiesCountToSpawn && enemies.length === 0) {
         waveState = 'cleared';
-        waveTimer = 60; // 1 second before next wave countdown (snappier inter-wave transition!)
-      }
-    } else if (waveState === 'cleared') {
-      waveTimer -= delta;
-      if (waveTimer <= 0) {
-        wave++;
-        // Give bonuses on clearing wave
-        const awardCredits = 15 + wave * 5;
-        const awardGems = Math.random() > 0.6 ? 1 : 0;
-        playerStats.credits += awardCredits;
-        playerStats.gems += awardGems;
-        creditsEarnedInRun += awardCredits;
-
-        spawnDamageText(`WAVE CLEAR! +${awardCredits} CR`, player.x, player.y - 40, '#facc15');
-        if (awardGems > 0) {
-          spawnDamageText(`+${awardGems} GEM FOUND`, player.x, player.y - 60, '#c084fc');
-        }
-
-        saveProgress();
-        advanceWave();
+        triggerLevelComplete();
       }
     }
 
@@ -2579,6 +2877,7 @@ function createGame() {
         }
 
         if (hit) {
+          shotsHitInLevel++;
           bullets.splice(j, 1);
           enemy.hp -= b.dmg;
 
@@ -2600,6 +2899,7 @@ function createGame() {
 
             score += enemy.points;
             enemiesDefeatedCount++;
+            enemiesDefeatedInLevel++;
             sounds.playExplosion();
 
             // Floating score popup!
@@ -3632,8 +3932,123 @@ function createGame() {
   }
 
   // ==========================================
-  // 🛑 END RUN PROCESSORS
+  // 🛑 END RUN PROCESSORS & LEVEL CONQUEST
   // ==========================================
+  function triggerLevelComplete() {
+    waveState = 'cleared';
+    destroyGame();
+
+    const levelScore = score;
+    const accuracy = shotsFiredInLevel > 0 ? Math.min(100, Math.round((shotsHitInLevel / shotsFiredInLevel) * 100)) : 100;
+    const levelTime = Math.max(1, Math.round((Date.now() - levelStartTime) / 1000));
+
+    // Calculate rating
+    let rating = 'C';
+    let ratingBonusPct = 0;
+    if (accuracy >= 80) {
+      rating = 'S';
+      ratingBonusPct = 0.50;
+    } else if (accuracy >= 65) {
+      rating = 'A';
+      ratingBonusPct = 0.30;
+    } else if (accuracy >= 50) {
+      rating = 'B';
+      ratingBonusPct = 0.15;
+    }
+
+    const baseCredits = 50 + currentLevel * 15;
+    const ratingBonusCredits = Math.round(baseCredits * ratingBonusPct);
+    const totalLevelCredits = baseCredits + ratingBonusCredits;
+
+    playerStats.credits += totalLevelCredits;
+    creditsEarnedInRun += totalLevelCredits;
+
+    if (!Array.isArray(playerStats.completedLevels)) playerStats.completedLevels = [];
+    if (!playerStats.completedLevels.includes(currentLevel)) {
+      playerStats.completedLevels.push(currentLevel);
+    }
+
+    if (currentLevel < 30) {
+      playerStats.highestUnlockedLevel = Math.max(playerStats.highestUnlockedLevel || 1, currentLevel + 1);
+    }
+    playerStats.currentLevel = currentLevel;
+    saveProgress();
+
+    sounds.playWaveComplete();
+
+    // Final Level 30 Victory condition check!
+    if (currentLevel === 30) {
+      const vicScore = document.getElementById('vic-score');
+      const vicEnemies = document.getElementById('vic-enemies');
+      const vicCredits = document.getElementById('vic-credits');
+      if (vicScore) vicScore.innerText = score;
+      if (vicEnemies) vicEnemies.innerText = enemiesDefeatedCount;
+      if (vicCredits) vicCredits.innerText = creditsEarnedInRun + " CR";
+
+      const vicModal = document.getElementById('victory-modal');
+      if (vicModal) vicModal.classList.remove('hidden');
+      return;
+    }
+
+    // Populate Level Complete Modal
+    const lcTitle = document.getElementById('lc-level-title');
+    if (lcTitle) lcTitle.innerText = `LEVEL ${currentLevel} CONQUERED`;
+
+    const rankTextEl = document.getElementById('lc-rank-text');
+    const rankBadgeEl = document.getElementById('lc-rank-badge');
+    if (rankTextEl && rankBadgeEl) {
+      rankTextEl.innerText = `RANK ${rating}`;
+      if (rating === 'S') {
+        rankBadgeEl.className = "px-6 py-2 rounded-xl bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border-2 border-yellow-400 text-yellow-300 flex items-center space-x-2 shadow-[0_0_15px_rgba(234,179,8,0.4)]";
+      } else if (rating === 'A') {
+        rankBadgeEl.className = "px-6 py-2 rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-2 border-cyan-400 text-cyan-300 flex items-center space-x-2 shadow-[0_0_15px_rgba(6,182,212,0.4)]";
+      } else if (rating === 'B') {
+        rankBadgeEl.className = "px-6 py-2 rounded-xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-2 border-emerald-400 text-emerald-300 flex items-center space-x-2 shadow-[0_0_15px_rgba(16,185,129,0.4)]";
+      } else {
+        rankBadgeEl.className = "px-6 py-2 rounded-xl bg-gradient-to-r from-slate-700/20 to-slate-800/20 border-2 border-slate-500 text-slate-300 flex items-center space-x-2";
+      }
+    }
+
+    const lcScore = document.getElementById('lc-score');
+    const lcAccuracy = document.getElementById('lc-accuracy');
+    const lcEnemies = document.getElementById('lc-enemies');
+    const lcCredits = document.getElementById('lc-credits');
+    const lcTime = document.getElementById('lc-time');
+
+    if (lcScore) lcScore.innerText = `+${score}`;
+    if (lcAccuracy) lcAccuracy.innerText = `${accuracy}% (${shotsHitInLevel}/${shotsFiredInLevel} hits)`;
+    if (lcEnemies) lcEnemies.innerText = enemiesDefeatedInLevel;
+    if (lcCredits) lcCredits.innerText = `+${totalLevelCredits} CR (${ratingBonusPct > 0 ? `+${Math.round(ratingBonusPct * 100)}% Rating Bonus` : 'Standard'})`;
+    if (lcTime) lcTime.innerText = `${levelTime}s`;
+
+    // Milestone rewards every 5 levels
+    const bonusBanner = document.getElementById('lc-bonus-banner');
+    if (bonusBanner) {
+      if (currentLevel % 5 === 0) {
+        bonusBanner.classList.remove('hidden');
+        if (currentLevel === 10) {
+          bonusBanner.innerText = "👑 EASY STAGE CLEAR! Hard Stage Unlocked + 10 Gems & 1000 CR!";
+          playerStats.gems += 10;
+          playerStats.credits += 1000;
+        } else if (currentLevel === 20) {
+          bonusBanner.innerText = "👑 HARD STAGE CLEAR! Expert Stage Unlocked + 25 Gems & 2000 CR!";
+          playerStats.gems += 25;
+          playerStats.credits += 2000;
+        } else {
+          bonusBanner.innerText = `🎁 MILESTONE LEVEL ${currentLevel} BONUS: +500 Credits & 5 Gems!`;
+          playerStats.credits += 500;
+          playerStats.gems += 5;
+        }
+        saveProgress();
+      } else {
+        bonusBanner.classList.add('hidden');
+      }
+    }
+
+    const lcModal = document.getElementById('level-complete-modal');
+    if (lcModal) lcModal.classList.remove('hidden');
+  }
+
   function triggerEndGame() {
     destroyGame(); // Release all touch/drag event listeners instantly on game over!
 
@@ -3646,7 +4061,7 @@ function createGame() {
     // Set Game Over screen details
     document.getElementById('over-score').innerText = score;
     document.getElementById('over-high-score').innerText = playerStats.highScore;
-    document.getElementById('over-wave').innerText = wave;
+    document.getElementById('over-wave').innerText = currentLevel;
     document.getElementById('over-enemies').innerText = enemiesDefeatedCount;
     document.getElementById('over-credits').innerText = creditsEarnedInRun;
 
@@ -3676,11 +4091,12 @@ function createGame() {
   }
 
   return {
-    start: function() {
+    start: function(lvl = startLevelNumber) {
       isRunning = true;
       isPaused = false;
       score = 0;
-      wave = 1;
+      currentLevel = lvl || 1;
+      wave = currentLevel;
       enemiesDefeatedCount = 0;
       creditsEarnedInRun = 0;
       planetHealth = planetMaxHealth;
@@ -3718,9 +4134,37 @@ function createGame() {
 
       // Trigger inputs and star fields
       initInput();
-      advanceWave();
+      startLevel(currentLevel);
 
       // Start the core Loop
+      lastTime = 0;
+      animationFrameId = requestAnimationFrame(gameLoop);
+    },
+
+    startNextLevel: function(nextLvl) {
+      isRunning = true;
+      isPaused = false;
+      currentLevel = nextLvl;
+      wave = currentLevel;
+
+      bullets.length = 0;
+      enemyBullets.length = 0;
+      playerMissiles.length = 0;
+      enemies.length = 0;
+      lootItems.length = 0;
+      particles.length = 0;
+      damageTexts.length = 0;
+      alienCores.length = 0;
+
+      player.hull = player.maxHull;
+      player.shield = player.maxShield;
+
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      initInput();
+      startLevel(nextLvl);
+
       lastTime = 0;
       animationFrameId = requestAnimationFrame(gameLoop);
     },
