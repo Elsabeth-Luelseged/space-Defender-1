@@ -518,6 +518,7 @@ function renderLevelSelectGrid() {
       btn.className = "p-2.5 rounded-xl border font-mono transition transform active:scale-95 cursor-pointer flex flex-col items-center justify-center space-y-0.5 " +
         (isBoss ? "bg-amber-950/30 border-amber-500/50 text-amber-300 hover:bg-amber-900/50 shadow-[0_0_10px_rgba(245,158,11,0.2)]" : "bg-slate-900 border-cyan-500/30 text-cyan-300 hover:bg-cyan-950/50 hover:border-cyan-400");
     } else {
+      btn.disabled = true;
       btn.className = "p-2.5 rounded-xl border border-slate-900 bg-slate-950/50 text-slate-600 font-mono cursor-not-allowed opacity-50 flex flex-col items-center justify-center space-y-0.5";
     }
 
@@ -530,7 +531,12 @@ function renderLevelSelectGrid() {
     `;
 
     if (isUnlocked) {
+      btn.addEventListener('mouseenter', () => {
+        sounds.playUIHover();
+      });
+
       btn.addEventListener('click', () => {
+        sounds.playUIClick();
         playerStats.currentLevel = i;
         saveProgress();
         
@@ -892,18 +898,30 @@ function initMenuSystem() {
   const btnBackLevelSelect = document.getElementById('btn-back-level-select');
 
   if (btnLevelSelect && modalLevelSelect) {
+    btnLevelSelect.addEventListener('mouseenter', () => {
+      sounds.playUIHover();
+    });
     btnLevelSelect.addEventListener('click', () => {
+      sounds.playUIClick();
       renderLevelSelectGrid();
       modalLevelSelect.classList.remove('hidden');
     });
   }
   if (btnCloseLevelSelect && modalLevelSelect) {
+    btnCloseLevelSelect.addEventListener('mouseenter', () => {
+      sounds.playUIHover();
+    });
     btnCloseLevelSelect.addEventListener('click', () => {
+      sounds.playUIClick();
       modalLevelSelect.classList.add('hidden');
     });
   }
   if (btnBackLevelSelect && modalLevelSelect) {
+    btnBackLevelSelect.addEventListener('mouseenter', () => {
+      sounds.playUIHover();
+    });
     btnBackLevelSelect.addEventListener('click', () => {
+      sounds.playUIClick();
       modalLevelSelect.classList.add('hidden');
     });
   }
@@ -1081,7 +1099,7 @@ function initMenuSystem() {
         }
         pauseModal.classList.add('hidden');
         showScreen('gameplay-container');
-        currentGameInstance = createGame();
+        currentGameInstance = createGame(playerStats.currentLevel || 1);
         currentGameInstance.start();
       }
     });
@@ -1161,7 +1179,8 @@ function initMenuSystem() {
     if (currentGameInstance) {
       currentGameInstance.destroy();
     }
-    currentGameInstance = createGame();
+    const restartLvl = playerStats.currentLevel || 1;
+    currentGameInstance = createGame(restartLvl);
     currentGameInstance.start();
   });
 
