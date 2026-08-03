@@ -1524,6 +1524,7 @@ function createGame(startLevelNumber = 1) {
   let shotsFiredInLevel = 0;
   let shotsHitInLevel = 0;
   let enemiesDefeatedInLevel = 0;
+  let targetEnemiesCount = 20;
   let levelStartTime = Date.now();
   
   // Game Loop request ID
@@ -1556,6 +1557,8 @@ function createGame(startLevelNumber = 1) {
     planetHealthPct: -1,
     pShieldPct: -1,
     pHealthPct: -1,
+    lives: -1,
+    objectiveTxt: '',
     waveState: '',
     medPct: -1,
     turretPct: -1,
@@ -1640,6 +1643,7 @@ function createGame(startLevelNumber = 1) {
     maxShield: 100,
     hull: 100,
     maxHull: 100,
+    lives: 3,
     shieldRegenRate: 0.06,
     lastHit: 0,
     lastFired: 0,
@@ -1955,21 +1959,25 @@ function createGame(startLevelNumber = 1) {
     currentLevel = lvl;
     wave = lvl;
     waveState = 'countdown';
-    waveTimer = lvl === 1 ? 25 : 60;
+    waveTimer = 30; // 0.5s level banner count
 
     shotsFiredInLevel = 0;
     shotsHitInLevel = 0;
     enemiesDefeatedInLevel = 0;
     levelStartTime = Date.now();
 
-    if (lvl <= 10) {
-      currentEnemiesCountToSpawn = 6 + (lvl - 1) * 2;
-    } else if (lvl <= 20) {
-      currentEnemiesCountToSpawn = 16 + (lvl - 11) * 2;
+    const isBossLvl = (lvl === 10 || lvl === 20 || lvl === 30);
+    if (isBossLvl) {
+      targetEnemiesCount = 1;
+    } else if (lvl === 1) {
+      targetEnemiesCount = 20;
+    } else if (lvl === 2) {
+      targetEnemiesCount = 30;
     } else {
-      currentEnemiesCountToSpawn = 26 + (lvl - 21) * 2;
+      targetEnemiesCount = 20 + (lvl - 1) * 5;
     }
 
+    currentEnemiesCountToSpawn = targetEnemiesCount;
     spawnedCountThisWave = 0;
 
     const hudLvl = document.getElementById('hud-level');
@@ -1978,6 +1986,7 @@ function createGame(startLevelNumber = 1) {
     updateDifficultyBadge(currentLevel);
     showLevelBanner(currentLevel);
     sounds.playWaveComplete();
+    updateHUDStats();
   }
 
   function advanceWave() {
@@ -2483,6 +2492,59 @@ function createGame(startLevelNumber = 1) {
     });
   }
 
+  // Player & Planet Damage Handlers
+  function damagePlayer(dmg) {
+    if (player.flashUntil && Date.now() < player.flashUntil) return;
+
+    player.lastHit = Date.now();
+    let remainingDmg = dmg;
+
+    if (player.shield > 0) {
+      if (player.shield >= remainingDmg) {
+        player.shield -= remainingDmg;
+        remainingDmg = 0;
+        sounds.playShieldHit();
+      } else {
+        remainingDmg -= player.shield;
+        player.shield = 0;
+      }
+    }
+
+    if (remainingDmg > 0) {
+      player.hull -= remainingDmg;
+      screenFlashAlpha = 0.4;
+      triggerScreenShake(8);
+      sounds.playHurt();
+
+      if (player.hull <= 0) {
+        player.hull = 0;
+        player.lives--;
+
+        if (player.lives > 0) {
+          spawnParticleBurst(player.x, player.y, '#f43f5e', 25);
+          spawnDamageText(`LIFE LOST! ${player.lives} REMAINING`, player.x, player.y - 30, '#f87171');
+          player.hull = player.maxHull;
+          player.shield = player.maxShield;
+          player.flashUntil = Date.now() + 2500; // 2.5s invincibility
+        } else {
+          spawnParticleBurst(player.x, player.y, '#ef4444', 40);
+          triggerEndGame();
+        }
+      }
+    }
+
+    updateHUDStats();
+  }
+
+  function damagePlanet(dmg) {
+    planetHealth -= dmg;
+    if (planetHealth <= 0) {
+      planetHealth = 0;
+      triggerEndGame();
+    }
+    updateHUDStats();
+  }
+
   // ==========================================
   // ⚙️ CORE GAME LOOP & PHYSICS UPDATE
   // ==========================================
@@ -2531,7 +2593,7 @@ function createGame(startLevelNumber = 1) {
       }
     }
 
-    if (player.hull <= 0 || planetHealth <= 0) {
+    if ((player.hull <= 0 && player.lives <= 0) || planetHealth <= 0) {
       triggerEndGame();
       return;
     }
@@ -2603,22 +2665,42 @@ function createGame(startLevelNumber = 1) {
         waveSplashTimer = 90; // 1.5 seconds splash alert
         const alertLabel = document.getElementById('hud-alert');
         if (alertLabel) alertLabel.style.opacity = '0';
-        enemySpawnTimer = Math.max(35, 100 - wave * 6); // Trigger immediate spawn!
+        enemySpawnTimer = 100; // Trigger immediate spawn!
       }
     } else if (waveState === 'active') {
-      // Spawn enemies periodically
+      // Spawn enemies periodically based on objective target
       enemySpawnTimer += delta;
-      const spawnRate = Math.max(35, 100 - wave * 6); // spawns speed up on waves
+      const spawnRate = Math.max(30, 90 - wave * 4);
       
-      if (enemySpawnTimer >= spawnRate && spawnedCountThisWave < currentEnemiesCountToSpawn) {
-        enemySpawnTimer = 0;
-        spawnEnemy();
+      const isBossLvl = (currentLevel === 10 || currentLevel === 20 || currentLevel === 30);
+      if (isBossLvl) {
+        if (spawnedCountThisWave < 1 && enemies.filter(e => e.isBoss).length === 0) {
+          if (enemySpawnTimer >= spawnRate) {
+            enemySpawnTimer = 0;
+            spawnEnemy();
+          }
+        }
+      } else {
+        if (enemiesDefeatedInLevel + enemies.length < targetEnemiesCount && enemies.length < 10) {
+          if (enemySpawnTimer >= spawnRate) {
+            enemySpawnTimer = 0;
+            spawnEnemy();
+          }
+        }
       }
 
-      // Check if wave/level is completely conquered
-      if (spawnedCountThisWave >= currentEnemiesCountToSpawn && enemies.length === 0) {
-        waveState = 'cleared';
-        triggerLevelComplete();
+      // Check if level objective is completely conquered
+      if (isBossLvl) {
+        const bossCount = enemies.filter(e => e.isBoss).length;
+        if (spawnedCountThisWave >= 1 && bossCount === 0 && enemiesDefeatedInLevel >= 1 && enemies.length === 0) {
+          waveState = 'cleared';
+          triggerLevelComplete();
+        }
+      } else {
+        if (enemiesDefeatedInLevel >= targetEnemiesCount && enemies.length === 0) {
+          waveState = 'cleared';
+          triggerLevelComplete();
+        }
       }
     }
 
@@ -3973,6 +4055,34 @@ function createGame(startLevelNumber = 1) {
     if (playerStats.highScore !== lastHudState.highScore) {
       document.getElementById('hud-high-score').innerText = playerStats.highScore;
       lastHudState.highScore = playerStats.highScore;
+    }
+
+    if (player.lives !== lastHudState.lives) {
+      const livesEl = document.getElementById('hud-lives-txt');
+      if (livesEl) livesEl.innerText = player.lives;
+      lastHudState.lives = player.lives;
+    }
+
+    const isBossLvl = (currentLevel === 10 || currentLevel === 20 || currentLevel === 30);
+    let objectiveTxt = "";
+    if (isBossLvl) {
+      const boss = enemies.find(e => e.isBoss);
+      if (boss) {
+        const bossHpPct = Math.max(0, Math.round((boss.hp / boss.maxHp) * 100));
+        objectiveTxt = `Defeat Boss (${bossHpPct}%)`;
+      } else if (enemiesDefeatedInLevel >= 1) {
+        objectiveTxt = `Boss Defeated!`;
+      } else {
+        objectiveTxt = `Defeat Boss`;
+      }
+    } else {
+      objectiveTxt = `Destroy ${enemiesDefeatedInLevel} / ${targetEnemiesCount}`;
+    }
+
+    if (objectiveTxt !== lastHudState.objectiveTxt) {
+      const objEl = document.getElementById('hud-objective-txt');
+      if (objEl) objEl.innerText = objectiveTxt;
+      lastHudState.objectiveTxt = objectiveTxt;
     }
 
     // Health ratios

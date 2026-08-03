@@ -246,6 +246,10 @@
                 <span id="hud-level" class="text-cyan-400 font-extrabold text-[11px] tracking-wider">1</span>
                 <span id="hud-wave" class="hidden">1</span>
               </div>
+              <div class="flex items-center space-x-1 border border-rose-500/30 bg-rose-950/30 rounded-lg px-2 py-1 leading-tight" title="Player Lives">
+                <span class="text-[10px]">❤️</span>
+                <span id="hud-lives-txt" class="text-rose-400 font-extrabold text-[11px]">3</span>
+              </div>
               <div id="hud-difficulty-badge" class="px-2 py-1 rounded-lg text-[8px] font-extrabold tracking-wider bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.2)]">
                 🟢 EASY
               </div>
@@ -310,16 +314,25 @@
             </div>
           </div>
 
-          <!-- Row 2: Home World Integrity bar -->
-          <div class="w-full flex items-center space-x-2 leading-none border-t border-slate-900/60 pt-1.5 mt-0.5">
-            <div class="flex items-center space-x-1.5 shrink-0">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span class="text-[8px] text-slate-400 font-bold tracking-wider">HOME WORLD INTEGRITY</span>
+          <!-- Row 2: Home World Integrity bar & Mission Objective -->
+          <div class="w-full flex items-center justify-between space-x-2.5 leading-none border-t border-slate-900/60 pt-1.5 mt-0.5">
+            <!-- Home World Integrity -->
+            <div class="flex items-center space-x-1.5 flex-1 min-w-[140px]">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+              <span class="text-[8px] text-slate-400 font-bold tracking-wider shrink-0">EARTH INTEGRITY</span>
+              <div class="flex-1 h-1 bg-slate-950 rounded-full border border-slate-900/60 overflow-hidden relative">
+                <div id="planet-health-bar" class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 shadow-[0_0_4px_#10b981] transition-all duration-200" style="width: 100%"></div>
+              </div>
+              <span id="planet-health-txt" class="text-emerald-400 font-bold text-[8px] w-6 text-right shrink-0">100%</span>
             </div>
-            <div class="flex-1 h-1 bg-slate-950 rounded-full border border-slate-900/60 overflow-hidden relative">
-              <div id="planet-health-bar" class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 shadow-[0_0_4px_#10b981] transition-all duration-200" style="width: 100%"></div>
+
+            <div class="h-3 w-[1px] bg-slate-800 shrink-0"></div>
+
+            <!-- Objective Progress Display -->
+            <div class="flex items-center space-x-1.5 shrink-0 bg-slate-900/90 border border-cyan-500/40 rounded-lg px-2.5 py-0.5 shadow-[0_0_8px_rgba(6,182,212,0.15)]">
+              <span class="text-[8px] font-bold text-cyan-400 tracking-wider uppercase">OBJECTIVE:</span>
+              <span id="hud-objective-txt" class="text-white font-extrabold text-[9px] tracking-wide">Destroy 0 / 20</span>
             </div>
-            <span id="planet-health-txt" class="text-emerald-400 font-bold text-[8px] w-6 text-right shrink-0">100%</span>
           </div>
         </div>
 
