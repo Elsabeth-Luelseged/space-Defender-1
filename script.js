@@ -2399,33 +2399,34 @@ function createGame(startLevelNumber = 1) {
         });
       }
 
-      const bulletColor = isCrit ? '#fbbf24' : (laserClassLvl >= 4 ? '#a78bfa' : '#22d3ee');
+      const bulletColor = isCrit ? '#fef08a' : (laserClassLvl >= 4 ? '#a78bfa' : '#facc15');
 
       if (laserClassLvl === 1) {
-        // Single central laser
-        bullets.push({ x: player.x, y: player.y - 18, vx: 0, vy: laserSpeed, dmg: dmg, size: 2.5, length: 14, color: bulletColor, isCrit: isCrit });
+        // Dual golden lasers from wing cannons (Matching XTREME starfighter!)
+        bullets.push({ x: player.x - 16, y: player.y - 12, vx: 0, vy: laserSpeed, dmg: dmg * 0.9, size: 2.8, length: 18, color: bulletColor, isCrit: isCrit });
+        bullets.push({ x: player.x + 16, y: player.y - 12, vx: 0, vy: laserSpeed, dmg: dmg * 0.9, size: 2.8, length: 18, color: bulletColor, isCrit: isCrit });
       } else if (laserClassLvl === 2) {
-        // Dual laser streams from wings
-        bullets.push({ x: player.x - 14, y: player.y - 5, vx: 0, vy: laserSpeed, dmg: dmg * 0.8, size: 2.5, length: 14, color: bulletColor, isCrit: isCrit });
-        bullets.push({ x: player.x + 14, y: player.y - 5, vx: 0, vy: laserSpeed, dmg: dmg * 0.8, size: 2.5, length: 14, color: bulletColor, isCrit: isCrit });
+        // Dual reinforced heavy golden plasma beams
+        bullets.push({ x: player.x - 16, y: player.y - 12, vx: 0, vy: laserSpeed, dmg: dmg * 1.1, size: 3.2, length: 22, color: bulletColor, isCrit: isCrit });
+        bullets.push({ x: player.x + 16, y: player.y - 12, vx: 0, vy: laserSpeed, dmg: dmg * 1.1, size: 3.2, length: 22, color: bulletColor, isCrit: isCrit });
       } else if (laserClassLvl === 3) {
-        // Triple Stream
-        bullets.push({ x: player.x - 16, y: player.y - 5, vx: -1.5, vy: laserSpeed + 0.5, dmg: dmg * 0.7, size: 2.5, length: 14, color: bulletColor, isCrit: isCrit });
-        bullets.push({ x: player.x, y: player.y - 18, vx: 0, vy: laserSpeed, dmg: dmg, size: 2.5, length: 14, color: bulletColor, isCrit: isCrit });
-        bullets.push({ x: player.x + 16, y: player.y - 5, vx: 1.5, vy: laserSpeed + 0.5, dmg: dmg * 0.7, size: 2.5, length: 14, color: bulletColor, isCrit: isCrit });
+        // Triple Stream (Dual wing lasers + center plasma stream)
+        bullets.push({ x: player.x - 16, y: player.y - 10, vx: -1.2, vy: laserSpeed + 0.5, dmg: dmg * 0.8, size: 2.8, length: 18, color: bulletColor, isCrit: isCrit });
+        bullets.push({ x: player.x, y: player.y - 20, vx: 0, vy: laserSpeed, dmg: dmg, size: 3.2, length: 22, color: '#38bdf8', isCrit: isCrit });
+        bullets.push({ x: player.x + 16, y: player.y - 10, vx: 1.2, vy: laserSpeed + 0.5, dmg: dmg * 0.8, size: 2.8, length: 18, color: bulletColor, isCrit: isCrit });
       } else if (laserClassLvl >= 4) {
         // Spread Plasma bursts (5 streams!)
         const spreads = [-3, -1.5, 0, 1.5, 3];
         spreads.forEach(sX => {
           bullets.push({
-            x: player.x + sX * 4,
-            y: player.y - 10,
+            x: player.x + sX * 5,
+            y: player.y - 12,
             vx: sX * 1.2,
             vy: laserSpeed + 1,
-            dmg: dmg * 0.65,
-            size: 3,
-            length: 12,
-            color: bulletColor,
+            dmg: dmg * 0.7,
+            size: 3.2,
+            length: 18,
+            color: sX === 0 ? '#38bdf8' : bulletColor,
             isCrit: isCrit
           });
         });
@@ -3165,7 +3166,20 @@ function createGame(startLevelNumber = 1) {
       ctx.translate(dx, dy);
     }
 
-    // 1. Draw Starfield
+    // 1. Draw Space Cosmic Background & Stars
+    ctx.save();
+    
+    // Cosmic Magenta/Purple Nebula Backdrop Glow
+    const cosmicGrad = ctx.createRadialGradient(
+      canvas.width * 0.5, canvas.height * 0.3, 50,
+      canvas.width * 0.5, canvas.height * 0.3, canvas.width * 0.8
+    );
+    cosmicGrad.addColorStop(0, 'rgba(124, 58, 237, 0.18)'); // Deep Purple nebula core
+    cosmicGrad.addColorStop(0.5, 'rgba(236, 72, 153, 0.10)'); // Pink cosmic dust
+    cosmicGrad.addColorStop(1, 'rgba(5, 5, 13, 0)');
+    ctx.fillStyle = cosmicGrad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
     stars.forEach(star => {
       ctx.fillStyle = star.color;
       ctx.fillRect(star.x, star.y, star.size, star.size);
@@ -3180,49 +3194,80 @@ function createGame(startLevelNumber = 1) {
         ctx.arc(obj.x, obj.y, obj.size, 0, Math.PI * 2);
         ctx.fillStyle = obj.color;
         ctx.fill();
-        // Draw subtle craters
         ctx.beginPath();
         ctx.arc(obj.x - obj.size * 0.3, obj.y - obj.size * 0.1, obj.size * 0.15, 0, Math.PI * 2);
         ctx.arc(obj.x + obj.size * 0.2, obj.y + obj.size * 0.3, obj.size * 0.12, 0, Math.PI * 2);
-        ctx.arc(obj.x + obj.size * 0.1, obj.y - obj.size * 0.4, obj.size * 0.1, 0, Math.PI * 2);
         ctx.fillStyle = obj.craterColor;
         ctx.fill();
       }
     });
 
-    // 2. Draw Planet Defense Base (Arc dome at screen bottom)
+    // 2. Draw Planet Defense Base & Earth Curve with Illuminated City Lights
     const planetY = canvas.height + 250;
-    const planetRadius = 300;
+    const planetRadius = 310;
     
-    // Draw atmosphere glow layers
+    // Earth Atmosphere Glow Limb
     const atmosphereGlow = ctx.createRadialGradient(
-      canvas.width / 2, planetY, planetRadius - 60,
-      canvas.width / 2, planetY, planetRadius + 30
+      canvas.width / 2, planetY, planetRadius - 50,
+      canvas.width / 2, planetY, planetRadius + 40
     );
-    atmosphereGlow.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
-    atmosphereGlow.addColorStop(0.5, 'rgba(6, 182, 212, 0.15)');
+    atmosphereGlow.addColorStop(0, 'rgba(34, 211, 238, 0.45)');
+    atmosphereGlow.addColorStop(0.4, 'rgba(59, 130, 246, 0.25)');
     atmosphereGlow.addColorStop(1, 'rgba(5, 5, 13, 0)');
 
     ctx.beginPath();
-    ctx.arc(canvas.width / 2, planetY, planetRadius + 30, Math.PI, 0);
+    ctx.arc(canvas.width / 2, planetY, planetRadius + 40, Math.PI, 0);
     ctx.fillStyle = atmosphereGlow;
     ctx.fill();
 
-    // Planet Crust Arc
+    // Earth Crust / Ocean Arc
     ctx.beginPath();
     ctx.arc(canvas.width / 2, planetY, planetRadius, Math.PI, 0);
-    ctx.strokeStyle = 'rgba(16, 185, 129, 0.7)';
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.8)';
     ctx.lineWidth = 3;
-    ctx.fillStyle = '#061c16';
+    const earthGrad = ctx.createLinearGradient(0, canvas.height - 60, 0, canvas.height);
+    earthGrad.addColorStop(0, '#0c2a26');
+    earthGrad.addColorStop(1, '#02100d');
+    ctx.fillStyle = earthGrad;
     ctx.fill();
     ctx.stroke();
 
-    // Draw grid rings representing Shield Grid on Earth
+    // City Night Lights illuminated on Earth surface
+    const cityPoints = [
+      { angle: Math.PI * 0.58, r: planetRadius - 15, size: 2.5 },
+      { angle: Math.PI * 0.62, r: planetRadius - 22, size: 3.0 },
+      { angle: Math.PI * 0.65, r: planetRadius - 12, size: 2.0 },
+      { angle: Math.PI * 0.72, r: planetRadius - 18, size: 3.5 },
+      { angle: Math.PI * 0.76, r: planetRadius - 25, size: 2.0 },
+      { angle: Math.PI * 0.82, r: planetRadius - 14, size: 3.0 },
+      { angle: Math.PI * 0.88, r: planetRadius - 20, size: 2.5 },
+      { angle: Math.PI * 0.38, r: planetRadius - 18, size: 2.8 },
+      { angle: Math.PI * 0.44, r: planetRadius - 22, size: 3.2 },
+      { angle: Math.PI * 0.48, r: planetRadius - 12, size: 2.2 }
+    ];
+
+    ctx.save();
+    cityPoints.forEach(pt => {
+      const cx = canvas.width / 2 + Math.cos(pt.angle) * pt.r;
+      const cy = planetY + Math.sin(pt.angle) * pt.r;
+      if (cy < canvas.height + 10) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, pt.size, 0, Math.PI * 2);
+        ctx.fillStyle = '#fef08a';
+        ctx.shadowColor = '#f59e0b';
+        ctx.shadowBlur = 8;
+        ctx.fill();
+      }
+    });
+    ctx.restore();
+
+    // Earth Shield Grid Ring
     ctx.beginPath();
-    ctx.arc(canvas.width / 2, planetY, planetRadius - 15, Math.PI, 0);
-    ctx.strokeStyle = 'rgba(34, 211, 238, 0.2)';
+    ctx.arc(canvas.width / 2, planetY, planetRadius - 10, Math.PI, 0);
+    ctx.strokeStyle = 'rgba(34, 211, 238, 0.25)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
+    ctx.restore();
 
     // 3. Draw Loot Drops (Gold coins, Gems, and Powerups)
     lootItems.forEach(item => {
@@ -3396,33 +3441,56 @@ function createGame(startLevelNumber = 1) {
       ctx.restore();
     });
 
-    // 4. Draw Player Spaceship
+    // 4. Draw Player Spaceship (XTREME Starfighter)
     if (player.hull > 0) {
       ctx.save();
       ctx.translate(player.x, player.y);
 
-      // Flickering Engine flame flare
+      const isFlashing = player.flashUntil && Date.now() < player.flashUntil;
       player.engineFlareTimer += 0.2;
-      const flameHeight = 12 + Math.sin(player.engineFlareTimer) * 4;
+      const flameHeight = 14 + Math.sin(player.engineFlareTimer) * 5;
+
+      // Dual Main Rear Thrusters Flame
+      [-10, 10].forEach(thrusterX => {
+        const thrusterGrad = ctx.createLinearGradient(thrusterX, 16, thrusterX, 16 + flameHeight);
+        if (abilities.overdrive.active) {
+          thrusterGrad.addColorStop(0, '#ffffff');
+          thrusterGrad.addColorStop(0.3, '#ec4899');
+          thrusterGrad.addColorStop(1, 'rgba(244, 63, 94, 0)');
+        } else {
+          thrusterGrad.addColorStop(0, '#ffffff');
+          thrusterGrad.addColorStop(0.3, '#06b6d4');
+          thrusterGrad.addColorStop(1, 'rgba(124, 58, 237, 0)');
+        }
+        ctx.beginPath();
+        ctx.moveTo(thrusterX - 4, 16);
+        ctx.lineTo(thrusterX, 16 + flameHeight);
+        ctx.lineTo(thrusterX + 4, 16);
+        ctx.closePath();
+        ctx.fillStyle = thrusterGrad;
+        ctx.shadowColor = abilities.overdrive.active ? '#f43f5e' : '#06b6d4';
+        ctx.shadowBlur = 12;
+        ctx.fill();
+      });
+
+      // Central Engine Exhaust Flare
+      const centerFlame = ctx.createLinearGradient(0, 18, 0, 18 + flameHeight * 1.2);
+      centerFlame.addColorStop(0, '#ffffff');
+      centerFlame.addColorStop(0.4, '#f59e0b');
+      centerFlame.addColorStop(1, 'rgba(239, 68, 68, 0)');
       ctx.beginPath();
-      ctx.moveTo(-6, player.height / 2 - 2);
-      ctx.lineTo(0, player.height / 2 - 2 + flameHeight);
-      ctx.lineTo(6, player.height / 2 - 2);
+      ctx.moveTo(-5, 18);
+      ctx.lineTo(0, 18 + flameHeight * 1.2);
+      ctx.lineTo(5, 18);
       ctx.closePath();
-      
-      // Use pink thruster visual on burst overdrive state
-      ctx.fillStyle = abilities.overdrive.active ? '#f43f5e' : '#f97316';
-      ctx.shadowColor = abilities.overdrive.active ? '#ec4899' : '#ea580c';
-      ctx.shadowBlur = 12;
+      ctx.fillStyle = centerFlame;
       ctx.fill();
 
-      // Draw companion Turrets if spell active
+      // Active companion drones
       if (abilities.turret.active) {
         drones.forEach(drone => {
           ctx.save();
           ctx.translate(Math.cos(drone.angleOffset) * drone.radius, Math.sin(drone.angleOffset) * drone.radius);
-          
-          // Draw small drone triangle
           ctx.beginPath();
           ctx.moveTo(0, -6);
           ctx.lineTo(5, 5);
@@ -3435,7 +3503,6 @@ function createGame(startLevelNumber = 1) {
           ctx.restore();
         });
       } else if (playerStats.equippedShip === 'crusader') {
-        // Crusader cruiser gets a small passive permanent companion drone!
         ctx.save();
         const passiveAngle = (time * 0.03);
         ctx.translate(Math.cos(passiveAngle) * 40, Math.sin(passiveAngle) * 40);
@@ -3446,32 +3513,129 @@ function createGame(startLevelNumber = 1) {
         ctx.restore();
       }
 
-      // Pilot Starship Vector Drawing
-      const isFlashing = player.flashUntil && Date.now() < player.flashUntil;
-      ctx.beginPath();
-      // Nose
-      ctx.moveTo(0, -player.height / 2);
-      // Right wing flare
-      ctx.lineTo(player.width / 2, player.height / 2);
-      // Center hull notch
-      ctx.lineTo(0, player.height / 3);
-      // Left wing flare
-      ctx.lineTo(-player.width / 2, player.height / 2);
-      ctx.closePath();
+      // XTREME Starfighter Ship Hull Path Drawing
+      if (isFlashing) {
+        // Solid white flash on hit
+        ctx.beginPath();
+        ctx.moveTo(0, -24);
+        ctx.lineTo(8, -12);
+        ctx.lineTo(24, 6);
+        ctx.lineTo(22, 18);
+        ctx.lineTo(12, 14);
+        ctx.lineTo(6, 20);
+        ctx.lineTo(-6, 20);
+        ctx.lineTo(-12, 14);
+        ctx.lineTo(-22, 18);
+        ctx.lineTo(-24, 6);
+        ctx.lineTo(-8, -12);
+        ctx.closePath();
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 15;
+        ctx.fill();
+      } else {
+        // Swept Metallic Wings
+        const wingGrad = ctx.createLinearGradient(-24, 0, 24, 0);
+        wingGrad.addColorStop(0, '#1e293b');
+        wingGrad.addColorStop(0.2, '#334155');
+        wingGrad.addColorStop(0.5, '#0f172a');
+        wingGrad.addColorStop(0.8, '#334155');
+        wingGrad.addColorStop(1, '#1e293b');
 
-      ctx.fillStyle = isFlashing ? '#ffffff' : '#0f172a';
-      ctx.fill();
-      ctx.strokeStyle = isFlashing ? '#ffffff' : player.color;
-      ctx.lineWidth = 2.5;
-      ctx.shadowColor = isFlashing ? '#ffffff' : player.color;
-      ctx.shadowBlur = isFlashing ? 15 : 10;
-      ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, -24); // Nose tip
+        ctx.lineTo(8, -12); // Right upper wing joint
+        ctx.lineTo(24, 6); // Right wing tip
+        ctx.lineTo(22, 18); // Right wing fin tail
+        ctx.lineTo(12, 14); // Right wing notch
+        ctx.lineTo(6, 20); // Right thruster pod
+        ctx.lineTo(-6, 20); // Rear center tail
+        ctx.lineTo(-12, 14); // Left thruster pod
+        ctx.lineTo(-22, 18); // Left wing notch
+        ctx.lineTo(-24, 6); // Left wing tip
+        ctx.lineTo(-8, -12); // Left upper wing joint
+        ctx.closePath();
 
-      // Cockpit window bubble
-      ctx.beginPath();
-      ctx.arc(0, -player.height / 6, 4, 0, Math.PI * 2);
-      ctx.fillStyle = '#ffffff';
-      ctx.fill();
+        ctx.fillStyle = wingGrad;
+        ctx.fill();
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Neon Blue Energy Lines along wings
+        ctx.beginPath();
+        ctx.moveTo(4, -8);
+        ctx.lineTo(18, 4);
+        ctx.lineTo(16, 12);
+        ctx.moveTo(-4, -8);
+        ctx.lineTo(-18, 4);
+        ctx.lineTo(-16, 12);
+        ctx.strokeStyle = '#00f0ff';
+        ctx.lineWidth = 2.0;
+        ctx.shadowColor = '#00f0ff';
+        ctx.shadowBlur = 8;
+        ctx.stroke();
+
+        // Central Fuselage Armor Tube
+        const bodyGrad = ctx.createLinearGradient(0, -24, 0, 18);
+        bodyGrad.addColorStop(0, '#475569');
+        bodyGrad.addColorStop(0.3, '#1e293b');
+        bodyGrad.addColorStop(1, '#0f172a');
+
+        ctx.beginPath();
+        ctx.moveTo(0, -24);
+        ctx.lineTo(7, -10);
+        ctx.lineTo(8, 12);
+        ctx.lineTo(0, 18);
+        ctx.lineTo(-8, 12);
+        ctx.lineTo(-7, -10);
+        ctx.closePath();
+        ctx.fillStyle = bodyGrad;
+        ctx.fill();
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Dual Wing Cannon Mounts (Where the golden lasers fire from!)
+        [-16, 16].forEach(gunX => {
+          ctx.beginPath();
+          ctx.rect(gunX - 2.5, -8, 5, 14);
+          ctx.fillStyle = '#334155';
+          ctx.fill();
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.rect(gunX - 1.5, -14, 3, 6);
+          ctx.fillStyle = '#94a3b8';
+          ctx.fill();
+        });
+
+        // High-Tech Glass Cockpit Canopy Dome (Glowing Royal Blue Glass)
+        const canopyGrad = ctx.createRadialGradient(0, -8, 1, 0, -8, 8);
+        canopyGrad.addColorStop(0, '#93c5fd'); // Specular light highlight
+        canopyGrad.addColorStop(0.3, '#3b82f6'); // Glowing blue
+        canopyGrad.addColorStop(0.8, '#1d4ed8'); // Deep royal blue
+        canopyGrad.addColorStop(1, '#0f172a'); // Frame boundary
+
+        ctx.beginPath();
+        ctx.ellipse(0, -8, 5.5, 9, 0, 0, Math.PI * 2);
+        ctx.fillStyle = canopyGrad;
+        ctx.shadowColor = '#38bdf8';
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.strokeStyle = '#60a5fa';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // White Glare Curve on Cockpit Dome
+        ctx.beginPath();
+        ctx.arc(-1.5, -11, 2.5, Math.PI * 1.1, Math.PI * 1.7);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      }
 
       // Active circular energy shield border overlay
       if (player.shield > 0) {
@@ -3480,13 +3644,12 @@ function createGame(startLevelNumber = 1) {
         ctx.strokeStyle = `rgba(34, 211, 238, ${Math.min(1.0, player.shield / player.maxShield * 0.6)})`;
         ctx.lineWidth = 1.5;
         ctx.shadowColor = '#06b6d4';
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = 10;
         ctx.stroke();
       }
 
       // Draw auto-locking reticle indicators on the nearest target
       if (enemies.length > 0) {
-        // Identify closest unit
         let closest = null;
         let minDist = 99999;
         enemies.forEach(e => {
@@ -3498,8 +3661,7 @@ function createGame(startLevelNumber = 1) {
         });
 
         if (closest && minDist < 400) {
-          // Draw locking brackets on closest target
-          ctx.restore(); // Exit player local coordinate space temporarily
+          ctx.restore();
           ctx.save();
           ctx.translate(closest.x, closest.y);
           
@@ -3520,19 +3682,30 @@ function createGame(startLevelNumber = 1) {
       ctx.restore();
     }
 
-    // 5. Draw Laser Bullets
+    // 5. Draw Laser Bullets (Dual-layer golden beam with white-hot core)
     bullets.forEach(b => {
       ctx.save();
+      const length = b.length || 18;
+      
+      // Outer Laser Glow Aura
       ctx.beginPath();
-      const length = b.length || 12;
       ctx.moveTo(b.x, b.y - length / 2);
       ctx.lineTo(b.x, b.y + length / 2);
-      ctx.strokeStyle = b.color;
-      ctx.lineWidth = b.size * 2;
+      ctx.strokeStyle = b.color || '#facc15';
+      ctx.lineWidth = (b.size || 2.8) * 2.2;
       ctx.lineCap = 'round';
-      ctx.shadowColor = b.color;
-      ctx.shadowBlur = 10;
+      ctx.shadowColor = b.color || '#f59e0b';
+      ctx.shadowBlur = 12;
       ctx.stroke();
+
+      // White-Hot Center Core Line inside the Laser Beam!
+      ctx.beginPath();
+      ctx.moveTo(b.x, b.y - length / 2 + 2);
+      ctx.lineTo(b.x, b.y + length / 2 - 2);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = Math.max(1, (b.size || 2.8) * 0.9);
+      ctx.stroke();
+
       ctx.restore();
     });
 
