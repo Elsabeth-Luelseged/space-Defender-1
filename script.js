@@ -3826,136 +3826,508 @@ function createGame(startLevelNumber = 1) {
       ctx.restore();
     });
 
-    // 6. Draw Enemies (Asteroids, Scouts, Bugs, Boss)
+    // 6. Draw Enemies (X-99 VANTA Spaceplanes & Asteroids)
     enemies.forEach(enemy => {
       ctx.save();
       ctx.translate(enemy.x, enemy.y);
 
       if (enemy.isBoss) {
-        // Draw heavy Boss ship
+        // ====================================================================
+        // 🚀 SUPER X-99 VANTA PRIME / DREADNOUGHT FLAGSHIP (BOSS)
+        // ====================================================================
+        const bW = enemy.width || 110;
+        const bH = enemy.height || 65;
+        const halfW = bW / 2;
+        const noseY = bH * 0.45;
+        const rearY = -bH * 0.45;
+        const roll = Math.max(-0.18, Math.min(0.18, (enemy.vx || 0) * 0.05));
+        ctx.rotate(roll);
+
+        const flameH = 14 + Math.sin(time * 0.25 + enemy.x) * 6;
+
+        // Quad Scramjet Engine Exhausts (Heavy Cyan/Magenta Plasma Flames)
+        [-32, -14, 14, 32].forEach(exX => {
+          const exGrad = ctx.createLinearGradient(exX, rearY, exX, rearY - flameH * 1.3);
+          exGrad.addColorStop(0, '#ffffff');
+          exGrad.addColorStop(0.3, enemy.color || '#ff0055');
+          exGrad.addColorStop(0.7, '#06b6d4');
+          exGrad.addColorStop(1, 'rgba(6, 182, 212, 0)');
+
+          ctx.beginPath();
+          ctx.moveTo(exX - 5, rearY);
+          ctx.lineTo(exX, rearY - flameH * 1.3);
+          ctx.lineTo(exX + 5, rearY);
+          ctx.closePath();
+          ctx.fillStyle = exGrad;
+          ctx.shadowColor = enemy.color || '#ff0055';
+          ctx.shadowBlur = 15;
+          ctx.fill();
+        });
+
+        // 1. Heavy Ventral Carbon Vanta Heat Shield Underbody
         ctx.beginPath();
-        // Nose side wings
-        ctx.moveTo(0, 25);
-        ctx.lineTo(enemy.width / 2, -15);
-        ctx.lineTo(enemy.width / 3, -30);
-        ctx.lineTo(-enemy.width / 3, -30);
-        ctx.lineTo(-enemy.width / 2, -15);
+        ctx.moveTo(0, noseY + 4);
+        ctx.lineTo(halfW * 0.35, noseY * 0.4);
+        ctx.lineTo(halfW, rearY * 0.2);
+        ctx.lineTo(halfW * 0.92, rearY);
+        ctx.lineTo(-halfW * 0.92, rearY);
+        ctx.lineTo(-halfW, rearY * 0.2);
+        ctx.lineTo(-halfW * 0.35, noseY * 0.4);
+        ctx.closePath();
+        ctx.fillStyle = '#09090b';
+        ctx.fill();
+
+        // 2. Main Dorsal Lifting Body Fuselage (X-99 Vanta Composite Armor)
+        const bossGrad = ctx.createLinearGradient(-halfW, 0, halfW, 0);
+        bossGrad.addColorStop(0, '#1e293b');
+        bossGrad.addColorStop(0.2, '#f8fafc');
+        bossGrad.addColorStop(0.5, '#e2e8f0');
+        bossGrad.addColorStop(0.8, '#f8fafc');
+        bossGrad.addColorStop(1, '#1e293b');
+
+        ctx.beginPath();
+        // Nose parabolic curve
+        ctx.moveTo(0, noseY);
+        ctx.bezierCurveTo(halfW * 0.15, noseY, halfW * 0.28, noseY * 0.6, halfW * 0.4, noseY * 0.2);
+        // Blended wing leading edge
+        ctx.lineTo(halfW * 0.88, rearY * 0.1);
+        // Canted outer winglet vertical stabilizer tip
+        ctx.lineTo(halfW, rearY * 0.05);
+        ctx.lineTo(halfW * 0.96, rearY * 0.85);
+        ctx.lineTo(halfW * 0.82, rearY * 0.7);
+        // Inboard elevon trailing edge & engine bays
+        ctx.lineTo(halfW * 0.45, rearY);
+        ctx.lineTo(halfW * 0.2, rearY * 0.88);
+        ctx.lineTo(-halfW * 0.2, rearY * 0.88);
+        ctx.lineTo(-halfW * 0.45, rearY);
+        ctx.lineTo(-halfW * 0.82, rearY * 0.7);
+        ctx.lineTo(-halfW * 0.96, rearY * 0.85);
+        ctx.lineTo(-halfW, rearY * 0.05);
+        ctx.lineTo(-halfW * 0.88, rearY * 0.1);
+        ctx.lineTo(-halfW * 0.4, noseY * 0.2);
+        ctx.bezierCurveTo(-halfW * 0.28, noseY * 0.6, -halfW * 0.15, noseY, 0, noseY);
         ctx.closePath();
 
-        ctx.fillStyle = '#111827';
+        ctx.fillStyle = bossGrad;
+        ctx.shadowColor = enemy.color || '#f43f5e';
+        ctx.shadowBlur = 16;
         ctx.fill();
-        ctx.strokeStyle = enemy.color;
-        ctx.lineWidth = 3;
-        ctx.shadowColor = '#ff0055';
-        ctx.shadowBlur = 14;
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Glowing core crystal
+        // 3. Canted Winglet Vertical Stabilizers (Dark Carbon Outer Fins with Accent Trim)
+        [-halfW * 0.9, halfW * 0.9].forEach((finX, idx) => {
+          const sign = idx === 0 ? -1 : 1;
+          ctx.beginPath();
+          ctx.moveTo(finX, rearY * 0.05);
+          ctx.lineTo(finX + sign * 8, rearY * 0.0);
+          ctx.lineTo(finX + sign * 5, rearY * 0.8);
+          ctx.lineTo(finX - sign * 5, rearY * 0.65);
+          ctx.closePath();
+          ctx.fillStyle = '#0f172a';
+          ctx.fill();
+          ctx.strokeStyle = enemy.color || '#f43f5e';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+        });
+
+        // 4. Iconic X-99 Vanta Crimson Red Aerodynamic Racing Stripes
         ctx.beginPath();
-        ctx.arc(0, -5, 8, 0, Math.PI * 2);
-        ctx.fillStyle = '#ff3366';
+        // Central spinal pinstripes
+        ctx.moveTo(0, noseY - 8);
+        ctx.lineTo(12, noseY * 0.1);
+        ctx.lineTo(14, rearY * 0.7);
+        ctx.moveTo(0, noseY - 8);
+        ctx.lineTo(-12, noseY * 0.1);
+        ctx.lineTo(-14, rearY * 0.7);
+        // Outer wing accent speed stripes
+        ctx.moveTo(22, 0);
+        ctx.lineTo(halfW * 0.75, rearY * 0.2);
+        ctx.moveTo(-22, 0);
+        ctx.lineTo(-halfW * 0.75, rearY * 0.2);
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2.4;
+        ctx.shadowColor = '#ef4444';
+        ctx.shadowBlur = 8;
+        ctx.stroke();
+
+        // 5. Dual Cockpit Canopy Domes (Tinted Panoramic Stealth Visors)
+        [-10, 10].forEach(cockpitX => {
+          const canopyGrad = ctx.createLinearGradient(cockpitX, noseY * 0.5, cockpitX, noseY * 0.1);
+          canopyGrad.addColorStop(0, '#020617');
+          canopyGrad.addColorStop(0.5, '#1e293b');
+          canopyGrad.addColorStop(1, '#0f172a');
+
+          ctx.beginPath();
+          ctx.ellipse(cockpitX, noseY * 0.35, 5, 10, 0, 0, Math.PI * 2);
+          ctx.fillStyle = canopyGrad;
+          ctx.fill();
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          // Canopy Specular Glare Arc
+          ctx.beginPath();
+          ctx.arc(cockpitX - 1.5, noseY * 0.35 - 3, 3, Math.PI * 1.1, Math.PI * 1.7);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+        });
+
+        // 6. Wing Roundel / Delta Insignia Decals ("X-99" & USA Delta Chevron)
+        [-halfW * 0.55, halfW * 0.55].forEach(insigniaX => {
+          ctx.save();
+          ctx.translate(insigniaX, rearY * 0.3);
+          // Navy Delta Triangle
+          ctx.beginPath();
+          ctx.moveTo(0, 7);
+          ctx.lineTo(6, -5);
+          ctx.lineTo(-6, -5);
+          ctx.closePath();
+          ctx.fillStyle = '#1e3a8a';
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          // Inner chevron
+          ctx.beginPath();
+          ctx.moveTo(0, 3);
+          ctx.lineTo(3, -3);
+          ctx.lineTo(-3, -3);
+          ctx.closePath();
+          ctx.fillStyle = '#ef4444';
+          ctx.fill();
+          ctx.restore();
+        });
+
+        // 7. Central Pulsing Plasma Power Core
+        const corePulse = 7 + Math.sin(time * 0.2) * 2;
+        ctx.beginPath();
+        ctx.arc(0, rearY * 0.2, corePulse, 0, Math.PI * 2);
+        ctx.fillStyle = enemy.color || '#ff0055';
+        ctx.shadowColor = enemy.color || '#ff0055';
+        ctx.shadowBlur = 18;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(0, rearY * 0.2, corePulse * 0.45, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
         ctx.fill();
 
-        // Boss health bar above
-        ctx.restore(); // exit space
-        ctx.save();
-        const hbW = 100;
-        const pct = enemy.hp / enemy.maxHp;
-        ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.fillRect(enemy.x - hbW / 2, enemy.y - 45, hbW, 4);
-        ctx.fillStyle = '#f43f5e';
-        ctx.fillRect(enemy.x - hbW / 2, enemy.y - 45, hbW * pct, 4);
-      } else {
-        if (enemy.type === 'asteroid') {
-          // Draw spinning asteroid vector
-          ctx.rotate(enemy.angle);
+        // 8. Dual Wing Plasma Turret Mounts
+        [-38, 38].forEach(turretX => {
           ctx.beginPath();
-          // Draw rough rocky vectors
-          const pts = 8;
-          for (let p = 0; p < pts; p++) {
-            const a = (Math.PI * 2 / pts) * p;
-            const rOffset = p % 2 === 0 ? 0.8 : 1.1;
-            const px = Math.cos(a) * enemy.size * rOffset;
-            const py = Math.sin(a) * enemy.size * rOffset;
-            if (p === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
-          }
-          ctx.closePath();
-          ctx.fillStyle = '#0f172a';
+          ctx.rect(turretX - 3, rearY * 0.4, 6, 12);
+          ctx.fillStyle = '#334155';
           ctx.fill();
-          ctx.strokeStyle = '#64748b';
-          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = '#cbd5e1';
+          ctx.lineWidth = 1;
           ctx.stroke();
-        } else if (enemy.type === 'scout') {
-          // Sleek neon space vector
+          // Muzzle tip
           ctx.beginPath();
-          ctx.moveTo(0, enemy.size);
-          ctx.lineTo(enemy.size, -enemy.size);
-          ctx.lineTo(0, -enemy.size / 2);
-          ctx.lineTo(-enemy.size, -enemy.size);
-          ctx.closePath();
-          ctx.fillStyle = '#1e1b4b';
+          ctx.rect(turretX - 1.5, rearY * 0.4 + 10, 3, 5);
+          ctx.fillStyle = '#f59e0b';
           ctx.fill();
-          ctx.strokeStyle = '#ec4899';
-          ctx.lineWidth = 2;
-          ctx.shadowColor = '#d946ef';
-          ctx.shadowBlur = 8;
-          ctx.stroke();
-        } else if (enemy.type === 'bug') {
-          // Bio insectoid ship
-          ctx.beginPath();
-          ctx.moveTo(0, enemy.size);
-          ctx.lineTo(enemy.size * 0.7, 0);
-          ctx.lineTo(enemy.size * 0.3, -enemy.size);
-          ctx.lineTo(-enemy.size * 0.3, -enemy.size);
-          ctx.lineTo(-enemy.size * 0.7, 0);
-          ctx.closePath();
-          ctx.fillStyle = '#064e3b';
-          ctx.fill();
-          ctx.strokeStyle = '#10b981';
-          ctx.lineWidth = 2;
-          ctx.shadowColor = '#059669';
-          ctx.shadowBlur = 8;
-          ctx.stroke();
-        } else if (enemy.type === 'swarmer') {
-          // Sharp neon-orange triangular interceptor
-          ctx.beginPath();
-          ctx.moveTo(0, enemy.size * 1.2);
-          ctx.lineTo(enemy.size * 0.8, -enemy.size * 0.8);
-          ctx.lineTo(0, -enemy.size * 0.3);
-          ctx.lineTo(-enemy.size * 0.8, -enemy.size * 0.8);
-          ctx.closePath();
-          ctx.fillStyle = '#1e110b';
-          ctx.fill();
-          ctx.strokeStyle = '#f97316';
-          ctx.lineWidth = 1.8;
-          ctx.shadowColor = '#ea580c';
-          ctx.shadowBlur = 8;
-          ctx.stroke();
-        } else if (enemy.type === 'elite') {
-          // Heavy cruiser with golden wing shields
-          ctx.beginPath();
-          ctx.moveTo(0, enemy.size * 1.3);
-          ctx.lineTo(enemy.size * 1.2, enemy.size * 0.2);
-          ctx.lineTo(enemy.size * 0.8, -enemy.size * 1.1);
-          ctx.lineTo(-enemy.size * 0.8, -enemy.size * 1.1);
-          ctx.lineTo(-enemy.size * 1.2, enemy.size * 0.2);
-          ctx.closePath();
-          ctx.fillStyle = '#0f172a';
-          ctx.fill();
-          ctx.strokeStyle = '#fbbf24'; // Golden amber
-          ctx.lineWidth = 2.5;
-          ctx.shadowColor = '#d97706';
-          ctx.shadowBlur = 12;
-          ctx.stroke();
+        });
 
-          // Central engine glow
+        // 9. Floating Boss Health Bar
+        ctx.restore(); // reset local rotation/transform
+        ctx.save();
+        const hbW = 120;
+        const hbH = 6;
+        const pct = Math.max(0, enemy.hp / enemy.maxHp);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+        ctx.fillRect(enemy.x - hbW / 2 - 2, enemy.y - bH / 2 - 22, hbW + 4, hbH + 4);
+        ctx.strokeStyle = 'rgba(244, 63, 94, 0.6)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(enemy.x - hbW / 2 - 2, enemy.y - bH / 2 - 22, hbW + 4, hbH + 4);
+        
+        const hpGrad = ctx.createLinearGradient(enemy.x - hbW / 2, 0, enemy.x + hbW / 2, 0);
+        hpGrad.addColorStop(0, '#f43f5e');
+        hpGrad.addColorStop(1, '#fbbf24');
+        ctx.fillStyle = hpGrad;
+        ctx.fillRect(enemy.x - hbW / 2, enemy.y - bH / 2 - 20, hbW * pct, hbH);
+
+        // Boss Label
+        ctx.font = 'bold 9px monospace';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#f43f5e';
+        ctx.shadowBlur = 4;
+        ctx.fillText(`X-99 VANTA PRIME: ${Math.round(pct * 100)}%`, enemy.x, enemy.y - bH / 2 - 26);
+
+      } else if (enemy.type === 'asteroid') {
+        // ====================================================================
+        // 🪨 ROTATING COSMIC ASTEROID
+        // ====================================================================
+        ctx.rotate(enemy.angle);
+        ctx.beginPath();
+        const pts = 8;
+        for (let p = 0; p < pts; p++) {
+          const a = (Math.PI * 2 / pts) * p;
+          const rOffset = p % 2 === 0 ? 0.8 : 1.15;
+          const px = Math.cos(a) * enemy.size * rOffset;
+          const py = Math.sin(a) * enemy.size * rOffset;
+          if (p === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+
+        const astGrad = ctx.createRadialGradient(-enemy.size * 0.3, -enemy.size * 0.3, 2, 0, 0, enemy.size * 1.2);
+        astGrad.addColorStop(0, '#475569');
+        astGrad.addColorStop(0.6, '#1e293b');
+        astGrad.addColorStop(1, '#090d16');
+        ctx.fillStyle = astGrad;
+        ctx.fill();
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Asteroid Craters
+        [-enemy.size * 0.3, enemy.size * 0.25].forEach((cx, idx) => {
+          const cy = idx === 0 ? -enemy.size * 0.2 : enemy.size * 0.3;
           ctx.beginPath();
-          ctx.arc(0, -enemy.size * 0.6, 4, 0, Math.PI * 2);
-          ctx.fillStyle = '#f97316';
+          ctx.arc(cx, cy, enemy.size * 0.22, 0, Math.PI * 2);
+          ctx.fillStyle = '#0f172a';
           ctx.fill();
+          ctx.strokeStyle = '#334155';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        });
+
+      } else {
+        // ====================================================================
+        // ✈️ X-99 VANTA HYPERSONIC STEALTH SPACEPLANE (SCOUT, SWARMER, BUG, ELITE)
+        // ====================================================================
+        const isScout = enemy.type === 'scout';
+        const isSwarmer = enemy.type === 'swarmer';
+        const isBug = enemy.type === 'bug';
+        const isElite = enemy.type === 'elite';
+
+        // Scale geometry according to enemy class
+        const scale = (enemy.size || 18) / 18;
+        const w = (isSwarmer ? 15 : (isScout ? 20 : (isBug ? 24 : 28))) * scale;
+        const l = (isSwarmer ? 22 : (isScout ? 26 : (isBug ? 28 : 34))) * scale;
+        const noseY = l * 0.55;
+        const rearY = -l * 0.45;
+
+        // Dynamic 3D banking roll based on lateral velocity and aerodynamic flutter
+        const roll = Math.max(-0.25, Math.min(0.25, (enemy.vx || 0) * 0.08 + Math.sin(time * 0.05 + enemy.x) * 0.04));
+        ctx.rotate(roll);
+
+        // Animated Scramjet Plasma Exhaust Flame
+        const flameH = (7 + Math.sin(time * 0.3 + enemy.x) * 3.5) * scale;
+        const thrusterWidth = isElite ? 7 : (isBug ? 6 : 4.5);
+
+        [-thrusterWidth, thrusterWidth].forEach(tx => {
+          const flameGrad = ctx.createLinearGradient(tx, rearY, tx, rearY - flameH);
+          if (isSwarmer) {
+            flameGrad.addColorStop(0, '#ffffff');
+            flameGrad.addColorStop(0.3, '#f97316');
+            flameGrad.addColorStop(1, 'rgba(239, 68, 68, 0)');
+          } else if (isBug) {
+            flameGrad.addColorStop(0, '#ffffff');
+            flameGrad.addColorStop(0.3, '#10b981');
+            flameGrad.addColorStop(1, 'rgba(6, 182, 212, 0)');
+          } else if (isElite) {
+            flameGrad.addColorStop(0, '#ffffff');
+            flameGrad.addColorStop(0.3, '#fbbf24');
+            flameGrad.addColorStop(1, 'rgba(249, 115, 22, 0)');
+          } else {
+            // Iconic Cyan Ion Scramjet
+            flameGrad.addColorStop(0, '#ffffff');
+            flameGrad.addColorStop(0.3, '#00f0ff');
+            flameGrad.addColorStop(1, 'rgba(59, 130, 246, 0)');
+          }
+
+          ctx.beginPath();
+          ctx.moveTo(tx - 3, rearY);
+          ctx.lineTo(tx, rearY - flameH);
+          ctx.lineTo(tx + 3, rearY);
+          ctx.closePath();
+          ctx.fillStyle = flameGrad;
+          ctx.shadowColor = isSwarmer ? '#f97316' : (isBug ? '#10b981' : (isElite ? '#fbbf24' : '#00f0ff'));
+          ctx.shadowBlur = 10;
+          ctx.fill();
+        });
+
+        // 1. Ventral Carbon Vanta-Black Heat Shield Underbody
+        ctx.beginPath();
+        ctx.moveTo(0, noseY + 2);
+        ctx.lineTo(w * 0.3, noseY * 0.4);
+        ctx.lineTo(w, rearY * 0.15);
+        ctx.lineTo(w * 0.85, rearY);
+        ctx.lineTo(-w * 0.85, rearY);
+        ctx.lineTo(-w, rearY * 0.15);
+        ctx.lineTo(-w * 0.3, noseY * 0.4);
+        ctx.closePath();
+        ctx.fillStyle = '#09090b';
+        ctx.fill();
+
+        // 2. Dorsal Aerodynamic Lifting Body Fuselage & Swept Delta Wings
+        const aeroGrad = ctx.createLinearGradient(-w, 0, w, 0);
+        if (isSwarmer) {
+          // Stealth Matte Carbon Black
+          aeroGrad.addColorStop(0, '#0f172a');
+          aeroGrad.addColorStop(0.3, '#334155');
+          aeroGrad.addColorStop(0.5, '#1e293b');
+          aeroGrad.addColorStop(0.7, '#334155');
+          aeroGrad.addColorStop(1, '#0f172a');
+        } else if (isBug) {
+          // Dark Titanium with Emerald Tint
+          aeroGrad.addColorStop(0, '#064e3b');
+          aeroGrad.addColorStop(0.3, '#cbd5e1');
+          aeroGrad.addColorStop(0.5, '#0f172a');
+          aeroGrad.addColorStop(0.7, '#cbd5e1');
+          aeroGrad.addColorStop(1, '#064e3b');
+        } else if (isElite) {
+          // Heavy Command Titanium Gold
+          aeroGrad.addColorStop(0, '#78350f');
+          aeroGrad.addColorStop(0.3, '#fef08a');
+          aeroGrad.addColorStop(0.5, '#1e293b');
+          aeroGrad.addColorStop(0.7, '#fef08a');
+          aeroGrad.addColorStop(1, '#78350f');
+        } else {
+          // Iconic X-99 VANTA Stealth Aerospace White & Light Composite
+          aeroGrad.addColorStop(0, '#1e293b');
+          aeroGrad.addColorStop(0.2, '#f8fafc');
+          aeroGrad.addColorStop(0.5, '#e2e8f0');
+          aeroGrad.addColorStop(0.8, '#f8fafc');
+          aeroGrad.addColorStop(1, '#1e293b');
+        }
+
+        ctx.beginPath();
+        // Parabolic nose cone
+        ctx.moveTo(0, noseY);
+        ctx.bezierCurveTo(w * 0.18, noseY, w * 0.35, noseY * 0.6, w * 0.45, noseY * 0.2);
+        // Blended wing leading edge
+        ctx.lineTo(w * 0.9, rearY * 0.1);
+        // Canted winglet vertical stabilizer tip
+        ctx.lineTo(w, rearY * 0.05);
+        ctx.lineTo(w * 0.94, rearY * 0.85);
+        ctx.lineTo(w * 0.8, rearY * 0.7);
+        // Inboard elevon trailing edge & engine cowlings
+        ctx.lineTo(w * 0.38, rearY);
+        ctx.lineTo(w * 0.15, rearY * 0.88);
+        ctx.lineTo(-w * 0.15, rearY * 0.88);
+        ctx.lineTo(-w * 0.38, rearY);
+        ctx.lineTo(-w * 0.8, rearY * 0.7);
+        ctx.lineTo(-w * 0.94, rearY * 0.85);
+        ctx.lineTo(-w, rearY * 0.05);
+        ctx.lineTo(-w * 0.9, rearY * 0.1);
+        ctx.lineTo(-w * 0.45, noseY * 0.2);
+        ctx.bezierCurveTo(-w * 0.35, noseY * 0.6, -w * 0.18, noseY, 0, noseY);
+        ctx.closePath();
+
+        ctx.fillStyle = aeroGrad;
+        ctx.shadowColor = isSwarmer ? '#f97316' : (isBug ? '#10b981' : (isElite ? '#fbbf24' : '#38bdf8'));
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.strokeStyle = isSwarmer ? '#f97316' : (isBug ? '#10b981' : (isElite ? '#fbbf24' : '#64748b'));
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        // 3. Canted Winglet Vertical Stabilizer Accents (Upturned Wingtip Fins)
+        [-w * 0.92, w * 0.92].forEach((finX, idx) => {
+          const sign = idx === 0 ? -1 : 1;
+          ctx.beginPath();
+          ctx.moveTo(finX, rearY * 0.05);
+          ctx.lineTo(finX + sign * 4, rearY * 0.0);
+          ctx.lineTo(finX + sign * 2, rearY * 0.8);
+          ctx.lineTo(finX - sign * 2, rearY * 0.65);
+          ctx.closePath();
+          ctx.fillStyle = '#0f172a';
+          ctx.fill();
+          ctx.strokeStyle = isSwarmer ? '#ea580c' : (isBug ? '#059669' : (isElite ? '#d97706' : '#94a3b8'));
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        });
+
+        // 4. Iconic X-99 VANTA Crimson Red Aerodynamic Speed Stripe & Flank Lines
+        ctx.beginPath();
+        const stripeColor = isSwarmer ? '#f97316' : (isBug ? '#10b981' : (isElite ? '#fbbf24' : '#ef4444'));
+        // Spinal racing stripe
+        ctx.moveTo(0, noseY - 5);
+        ctx.lineTo(w * 0.18, noseY * 0.1);
+        ctx.lineTo(w * 0.22, rearY * 0.65);
+        ctx.moveTo(0, noseY - 5);
+        ctx.lineTo(-w * 0.18, noseY * 0.1);
+        ctx.lineTo(-w * 0.22, rearY * 0.65);
+        // Wing flank speed lines
+        ctx.moveTo(w * 0.35, 0);
+        ctx.lineTo(w * 0.75, rearY * 0.2);
+        ctx.moveTo(-w * 0.35, 0);
+        ctx.lineTo(-w * 0.75, rearY * 0.2);
+        ctx.strokeStyle = stripeColor;
+        ctx.lineWidth = 1.6;
+        ctx.shadowColor = stripeColor;
+        ctx.shadowBlur = 6;
+        ctx.stroke();
+
+        // 5. Tinted Stealth Panoramic Cockpit Canopy Visor
+        const canopyY = noseY * 0.38;
+        const canopyGrad = ctx.createLinearGradient(0, canopyY + 6, 0, canopyY - 6);
+        canopyGrad.addColorStop(0, '#020617');
+        canopyGrad.addColorStop(0.5, isSwarmer ? '#450a0a' : (isBug ? '#064e3b' : (isElite ? '#451a03' : '#1e293b')));
+        canopyGrad.addColorStop(1, '#0f172a');
+
+        ctx.beginPath();
+        ctx.ellipse(0, canopyY, w * 0.16, l * 0.18, 0, 0, Math.PI * 2);
+        ctx.fillStyle = canopyGrad;
+        ctx.fill();
+        ctx.strokeStyle = isSwarmer ? '#f87171' : (isBug ? '#34d399' : (isElite ? '#fcd34d' : '#93c5fd'));
+        ctx.lineWidth = 0.9;
+        ctx.stroke();
+
+        // Cockpit Specular Glare Arc
+        ctx.beginPath();
+        ctx.arc(-1, canopyY - 2, Math.max(1.5, w * 0.08), Math.PI * 1.1, Math.PI * 1.7);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.0;
+        ctx.stroke();
+
+        // 6. Wing Roundel / Delta Decals ("X-99" & USA Delta Chevrons)
+        if (w >= 18) {
+          [-w * 0.55, w * 0.55].forEach(insigniaX => {
+            ctx.save();
+            ctx.translate(insigniaX, rearY * 0.3);
+            // Triangular Insignia
+            ctx.beginPath();
+            ctx.moveTo(0, 4.5);
+            ctx.lineTo(4, -3.5);
+            ctx.lineTo(-4, -3.5);
+            ctx.closePath();
+            ctx.fillStyle = isElite ? '#78350f' : '#1e3a8a';
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 0.7;
+            ctx.stroke();
+            // Tiny red chevron core
+            ctx.beginPath();
+            ctx.moveTo(0, 2);
+            ctx.lineTo(2, -2);
+            ctx.lineTo(-2, -2);
+            ctx.closePath();
+            ctx.fillStyle = stripeColor;
+            ctx.fill();
+            ctx.restore();
+          });
+        }
+
+        // 7. Elite / Heavy Tactical Blaster Mounts
+        if (isElite || isBug) {
+          [-w * 0.5, w * 0.5].forEach(gunX => {
+            ctx.beginPath();
+            ctx.rect(gunX - 1.5, rearY * 0.3, 3, 7);
+            ctx.fillStyle = '#334155';
+            ctx.fill();
+            ctx.strokeStyle = isElite ? '#fbbf24' : '#10b981';
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          });
         }
       }
+
       ctx.restore();
     });
 
@@ -4762,50 +5134,192 @@ function drawTutorialEnemy(ctx, e) {
   ctx.save();
   ctx.translate(e.x, e.y);
 
-  if (e.type === 'bug') {
+  if (e.type === 'boss') {
+    // Tutorial Boss X-99 VANTA Flagship
+    const w = 45;
+    const l = 32;
+    const noseY = l * 0.55;
+    const rearY = -l * 0.45;
+
+    // Thruster flame
+    const flameH = 10 + Math.sin(tutorialTimer * 0.25) * 4;
+    [-12, 12].forEach(tx => {
+      const fGrad = ctx.createLinearGradient(tx, rearY, tx, rearY - flameH);
+      fGrad.addColorStop(0, '#ffffff');
+      fGrad.addColorStop(0.3, '#f43f5e');
+      fGrad.addColorStop(1, 'rgba(244, 63, 94, 0)');
+      ctx.beginPath();
+      ctx.moveTo(tx - 3, rearY);
+      ctx.lineTo(tx, rearY - flameH);
+      ctx.lineTo(tx + 3, rearY);
+      ctx.fillStyle = fGrad;
+      ctx.fill();
+    });
+
+    // Ventral carbon base
     ctx.beginPath();
-    ctx.moveTo(0, e.size);
-    ctx.lineTo(e.size * 0.8, -e.size * 0.5);
-    ctx.lineTo(0, -e.size);
-    ctx.lineTo(-e.size * 0.8, -e.size * 0.5);
+    ctx.moveTo(0, noseY + 2);
+    ctx.lineTo(w * 0.3, noseY * 0.4);
+    ctx.lineTo(w, rearY * 0.15);
+    ctx.lineTo(w * 0.85, rearY);
+    ctx.lineTo(-w * 0.85, rearY);
+    ctx.lineTo(-w, rearY * 0.15);
+    ctx.lineTo(-w * 0.3, noseY * 0.4);
     ctx.closePath();
-    ctx.fillStyle = '#10b981';
-    ctx.shadowColor = '#10b981';
-    ctx.shadowBlur = 8;
-    ctx.fill();
-  } else if (e.type === 'scout') {
-    ctx.beginPath();
-    ctx.moveTo(0, -e.size);
-    ctx.lineTo(e.size, e.size * 0.3);
-    ctx.lineTo(e.size * 0.3, e.size);
-    ctx.lineTo(-e.size * 0.3, e.size);
-    ctx.lineTo(-e.size, e.size * 0.3);
-    ctx.closePath();
-    ctx.fillStyle = '#ec4899';
-    ctx.shadowColor = '#ec4899';
-    ctx.shadowBlur = 8;
-    ctx.fill();
-  } else if (e.type === 'boss') {
-    ctx.beginPath();
-    ctx.moveTo(0, -25);
-    ctx.lineTo(30, -5);
-    ctx.lineTo(25, 25);
-    ctx.lineTo(10, 15);
-    ctx.lineTo(0, 30);
-    ctx.lineTo(-10, 15);
-    ctx.lineTo(-25, 25);
-    ctx.lineTo(-30, -5);
-    ctx.closePath();
-    ctx.fillStyle = '#ef4444';
-    ctx.shadowColor = '#ef4444';
-    ctx.shadowBlur = 12;
+    ctx.fillStyle = '#09090b';
     ctx.fill();
 
+    // Dorsal X-99 Vanta Body
+    const bossGrad = ctx.createLinearGradient(-w, 0, w, 0);
+    bossGrad.addColorStop(0, '#1e293b');
+    bossGrad.addColorStop(0.2, '#f8fafc');
+    bossGrad.addColorStop(0.5, '#e2e8f0');
+    bossGrad.addColorStop(0.8, '#f8fafc');
+    bossGrad.addColorStop(1, '#1e293b');
+
     ctx.beginPath();
-    ctx.arc(-8, -5, 3.5, 0, Math.PI * 2);
-    ctx.arc(8, -5, 3.5, 0, Math.PI * 2);
-    ctx.fillStyle = '#facc15';
+    ctx.moveTo(0, noseY);
+    ctx.bezierCurveTo(w * 0.18, noseY, w * 0.35, noseY * 0.6, w * 0.45, noseY * 0.2);
+    ctx.lineTo(w * 0.9, rearY * 0.1);
+    ctx.lineTo(w, rearY * 0.05);
+    ctx.lineTo(w * 0.94, rearY * 0.85);
+    ctx.lineTo(w * 0.8, rearY * 0.7);
+    ctx.lineTo(w * 0.38, rearY);
+    ctx.lineTo(w * 0.15, rearY * 0.88);
+    ctx.lineTo(-w * 0.15, rearY * 0.88);
+    ctx.lineTo(-w * 0.38, rearY);
+    ctx.lineTo(-w * 0.8, rearY * 0.7);
+    ctx.lineTo(-w * 0.94, rearY * 0.85);
+    ctx.lineTo(-w, rearY * 0.05);
+    ctx.lineTo(-w * 0.9, rearY * 0.1);
+    ctx.lineTo(-w * 0.45, noseY * 0.2);
+    ctx.bezierCurveTo(-w * 0.35, noseY * 0.6, -w * 0.18, noseY, 0, noseY);
+    ctx.closePath();
+    ctx.fillStyle = bossGrad;
+    ctx.shadowColor = '#f43f5e';
+    ctx.shadowBlur = 12;
     ctx.fill();
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Red racing stripe
+    ctx.beginPath();
+    ctx.moveTo(0, noseY - 4);
+    ctx.lineTo(6, noseY * 0.1);
+    ctx.lineTo(8, rearY * 0.65);
+    ctx.moveTo(0, noseY - 4);
+    ctx.lineTo(-6, noseY * 0.1);
+    ctx.lineTo(-8, rearY * 0.65);
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Cockpit
+    ctx.beginPath();
+    ctx.ellipse(0, noseY * 0.35, 4, 8, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#0f172a';
+    ctx.fill();
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+  } else {
+    // Tutorial X-99 VANTA (Scout / Bug)
+    const isBug = e.type === 'bug';
+    const w = isBug ? 16 : 14;
+    const l = isBug ? 20 : 18;
+    const noseY = l * 0.55;
+    const rearY = -l * 0.45;
+
+    // Scramjet plume
+    const flameH = 6 + Math.sin(tutorialTimer * 0.3) * 2.5;
+    const fGrad = ctx.createLinearGradient(0, rearY, 0, rearY - flameH);
+    fGrad.addColorStop(0, '#ffffff');
+    fGrad.addColorStop(0.3, isBug ? '#10b981' : '#00f0ff');
+    fGrad.addColorStop(1, 'rgba(6, 182, 212, 0)');
+    ctx.beginPath();
+    ctx.moveTo(-3, rearY);
+    ctx.lineTo(0, rearY - flameH);
+    ctx.lineTo(3, rearY);
+    ctx.fillStyle = fGrad;
+    ctx.fill();
+
+    // Ventral carbon base
+    ctx.beginPath();
+    ctx.moveTo(0, noseY + 1.5);
+    ctx.lineTo(w * 0.3, noseY * 0.4);
+    ctx.lineTo(w, rearY * 0.15);
+    ctx.lineTo(w * 0.85, rearY);
+    ctx.lineTo(-w * 0.85, rearY);
+    ctx.lineTo(-w, rearY * 0.15);
+    ctx.lineTo(-w * 0.3, noseY * 0.4);
+    ctx.closePath();
+    ctx.fillStyle = '#09090b';
+    ctx.fill();
+
+    // Dorsal X-99 Vanta Body
+    const vGrad = ctx.createLinearGradient(-w, 0, w, 0);
+    if (isBug) {
+      vGrad.addColorStop(0, '#064e3b');
+      vGrad.addColorStop(0.3, '#cbd5e1');
+      vGrad.addColorStop(0.5, '#0f172a');
+      vGrad.addColorStop(0.7, '#cbd5e1');
+      vGrad.addColorStop(1, '#064e3b');
+    } else {
+      vGrad.addColorStop(0, '#1e293b');
+      vGrad.addColorStop(0.2, '#f8fafc');
+      vGrad.addColorStop(0.5, '#e2e8f0');
+      vGrad.addColorStop(0.8, '#f8fafc');
+      vGrad.addColorStop(1, '#1e293b');
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(0, noseY);
+    ctx.bezierCurveTo(w * 0.18, noseY, w * 0.35, noseY * 0.6, w * 0.45, noseY * 0.2);
+    ctx.lineTo(w * 0.9, rearY * 0.1);
+    ctx.lineTo(w, rearY * 0.05);
+    ctx.lineTo(w * 0.94, rearY * 0.85);
+    ctx.lineTo(w * 0.8, rearY * 0.7);
+    ctx.lineTo(w * 0.38, rearY);
+    ctx.lineTo(w * 0.15, rearY * 0.88);
+    ctx.lineTo(-w * 0.15, rearY * 0.88);
+    ctx.lineTo(-w * 0.38, rearY);
+    ctx.lineTo(-w * 0.8, rearY * 0.7);
+    ctx.lineTo(-w * 0.94, rearY * 0.85);
+    ctx.lineTo(-w, rearY * 0.05);
+    ctx.lineTo(-w * 0.9, rearY * 0.1);
+    ctx.lineTo(-w * 0.45, noseY * 0.2);
+    ctx.bezierCurveTo(-w * 0.35, noseY * 0.6, -w * 0.18, noseY, 0, noseY);
+    ctx.closePath();
+    ctx.fillStyle = vGrad;
+    ctx.shadowColor = isBug ? '#10b981' : '#38bdf8';
+    ctx.shadowBlur = 8;
+    ctx.fill();
+    ctx.strokeStyle = isBug ? '#10b981' : '#64748b';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Red racing stripe
+    ctx.beginPath();
+    ctx.moveTo(0, noseY - 3);
+    ctx.lineTo(w * 0.18, noseY * 0.1);
+    ctx.lineTo(w * 0.22, rearY * 0.65);
+    ctx.moveTo(0, noseY - 3);
+    ctx.lineTo(-w * 0.18, noseY * 0.1);
+    ctx.lineTo(-w * 0.22, rearY * 0.65);
+    ctx.strokeStyle = isBug ? '#10b981' : '#ef4444';
+    ctx.lineWidth = 1.3;
+    ctx.stroke();
+
+    // Cockpit
+    ctx.beginPath();
+    ctx.ellipse(0, noseY * 0.38, w * 0.15, l * 0.16, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#0f172a';
+    ctx.fill();
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
   }
 
   ctx.restore();
